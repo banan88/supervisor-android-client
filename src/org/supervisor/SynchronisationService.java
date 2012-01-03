@@ -1,21 +1,14 @@
 package org.supervisor;
 
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.util.Scanner;
-
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
-
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+
 
 
 
@@ -23,7 +16,10 @@ public class SynchronisationService extends Service {
 
 	private static final String TAG = SynchronisationService.class.getSimpleName();
 	private SynchronisationThread thread;
-	private int delay = 360000; //6min
+	private long SYNC_DELAY = 360000; //6min
+	private long NOTIFICATION_CANCEL_DELAY = 1000; //1s after GET
+	private int NOTIFICATION_ID = 1;
+	private NotificationManager mgr;
 	
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -53,9 +49,6 @@ public class SynchronisationService extends Service {
 		return START_STICKY;
 	}
 
-	public String convertStreamToString(InputStream is) { 
-	    return new Scanner(is).useDelimiter("\\A").next();
-	}
 
 	private class SynchronisationThread extends Thread {
 		
@@ -65,21 +58,29 @@ public class SynchronisationService extends Service {
 			Log.d(TAG, "run");
 			try{
 				while(true){
-					HttpClient httpclient = new DefaultHttpClient();
-					try{
-						HttpGet get = new HttpGet("http://10.0.2.2/"); //127.0.0.1 used internally in android
-						ResponseHandler<String> responseHandler = new BasicResponseHandler();
-						String response = httpclient.execute(get, responseHandler);
-						Log.d(TAG, response);
-					}catch (IOException e){
-						Log.d("TAG", e.getMessage());
-					}
-					finally {
-						httpclient.getConnectionManager().shutdown();
-					}
-					sleep(delay);
+					
+					
+					
+						
+						String ns = Context.NOTIFICATION_SERVICE;
+						mgr = (NotificationManager) getSystemService(ns);
+						int icon = R.drawable.ic_menu_refresh;
+						Notification not = new Notification(icon, getString(R.string.sync_status_bar_txt), System.currentTimeMillis());
+						PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, null, 0);
+						not.setLatestEventInfo(getApplicationContext(), getString(R.string.sync_notification_title),
+								getString(R.string.sync_notification_body), pi);
+						mgr.notify(NOTIFICATION_ID, not);
+						
+						ApiManager.setCredentials("robol2", "robol2");
+						Log.d(TAG, ApiManager.getTasks(ApiManager.CURRENT_TASKS));
+	
+
+						sleep(NOTIFICATION_CANCEL_DELAY);
+						mgr.cancel(NOTIFICATION_ID);
+					
+					sleep(SYNC_DELAY);
 				}
-			}catch (InterruptedException e) {Log.d(TAG, "interrupted exception");}
+			} catch (InterruptedException e) {Log.d(TAG, "interrupted exception");}
 		}
 		
 	}

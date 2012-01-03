@@ -2,5 +2,8 @@
 <resources>
     <string name="app_name">Supervisor-android-client</string>
     <string name="synchronise_title">synchronizuj</string>
-    <string name="dialog_text">Synchronizuję...</string>
+    <string name="dialog_text">Rozpoczęto synchronizację...</string>
+    <string name="sync_notification_title">Supervisor</string>
+    <string name="sync_notification_body">Synchronizuję...</string>
+    <string name="sync_status_bar_txt">Synchronizacja...</string>
 </resources>
