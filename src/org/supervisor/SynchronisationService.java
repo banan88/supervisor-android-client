@@ -59,9 +59,6 @@ public class SynchronisationService extends Service {
 			try{
 				while(true){
 					
-					
-					
-						
 						String ns = Context.NOTIFICATION_SERVICE;
 						mgr = (NotificationManager) getSystemService(ns);
 						int icon = R.drawable.ic_menu_refresh;
@@ -72,9 +69,7 @@ public class SynchronisationService extends Service {
 						mgr.notify(NOTIFICATION_ID, not);
 						
 						ApiManager.setCredentials("robol2", "robol2");
-						Log.d(TAG, ApiManager.getTasks(ApiManager.CURRENT_TASKS));
-	
-
+						Log.d(TAG, ApiManager.getTasks().get(0).getCreationTime());
 						sleep(NOTIFICATION_CANCEL_DELAY);
 						mgr.cancel(NOTIFICATION_ID);
 					

@@ -122,7 +122,7 @@ public class DataStorage {
 					start_time = null;
 				}
 				
-				Task task = new Task(c.getLong(0),
+				/*Task task = new Task(c.getLong(0),
 						c.getString(1),
 						c.getDouble(2),
 						c.getDouble(3),
@@ -132,8 +132,8 @@ public class DataStorage {
 						finish_time,
 						start_time,
 						c.getInt(9),
-						c.getString(10));
-				return task;
+						c.getString(10));*/
+				return null;
 			}
 		}
 		return null;
