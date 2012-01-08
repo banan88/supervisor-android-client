@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    >
-    <LinearLayout android:id="@+id/linearLayout1" android:layout_height="wrap_content" android:layout_width="match_parent"></LinearLayout>
-    <LinearLayout android:id="@+id/linearLayout2" android:layout_width="match_parent" android:layout_height="match_parent">
-        <ListView android:id="@+id/listView1" android:layout_width="match_parent" android:layout_height="match_parent"></ListView>
-    </LinearLayout>
+android:orientation="vertical" android:layout_height="fill_parent"
+android:layout_width="fill_parent">
+<TextView android:layout_width="wrap_content"
+android:layout_height="wrap_content" android:layout_gravity="center"
+android:layout_margin="10dp" android:text="@string/app_name"
+android:textColor="#fff" android:textSize="30sp" />
+<!-- -->
+<ListView android:layout_height="fill_parent"
+android:layout_width="fill_parent" android:id="@+id/tasklist"
+android:background="#6000" />
 </LinearLayout>

@@ -1,9 +1,12 @@
 package org.supervisor;
 
+import java.util.ArrayList;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
@@ -20,6 +23,7 @@ public class SynchronisationService extends Service {
 	private long NOTIFICATION_CANCEL_DELAY = 1000; //1s after GET
 	private int NOTIFICATION_ID = 1;
 	private NotificationManager mgr;
+	private DataStorage dataStorage;
 	
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -29,6 +33,7 @@ public class SynchronisationService extends Service {
 		super.onCreate();
 		thread = new SynchronisationThread();
 		Log.d(TAG, "onCreate() called");
+		dataStorage = new DataStorage(this);
 	}
 	
 	public void onDestroy() {
@@ -68,11 +73,36 @@ public class SynchronisationService extends Service {
 								getString(R.string.sync_notification_body), pi);
 						mgr.notify(NOTIFICATION_ID, not);
 						
-						ApiManager.setCredentials("robol2", "robol2");
-						Log.d(TAG, ApiManager.getTasks().get(0).getCreationTime());
+						ApiManager.setCredentials("robol", "robol");
+						
+						ArrayList<Task> tasks = ApiManager.getTasksSince(ApiManager.getLastSyncTime());
+						ContentValues values = new ContentValues();
+						for (Task task : tasks) {
+							values.put(DataStorage.C_ID, task.getId());
+							values.put(DataStorage.C_NAME, task.getName());
+							values.put(DataStorage.C_DESC, task.getDescription());
+							values.put(DataStorage.C_LAT, task.getLatitude());
+							values.put(DataStorage.C_LON, task.getLongitude());
+							values.put(DataStorage.C_STATE, task.getState());
+							values.put(DataStorage.C_CREATION_TIME, task.getCreationTime());
+							values.put(DataStorage.C_LAST_MODIFIED, task.getLastModified());
+							values.put(DataStorage.C_FINISH_TIME, task.getFinishTime());
+							values.put(DataStorage.C_START_TIME, task.getStartTime());
+							values.put(DataStorage.C_VERSION, task.getVersion());
+							values.put(DataStorage.C_LAST_SYNC, task.getLastSynced());
+							dataStorage.insert(values);
+						}
+						dataStorage.close();
+						
+						
+						Log.d(TAG, Integer.toString(ApiManager.getTasksSince(ApiManager.getLastSyncTime()).size()));
+						
+						
 						sleep(NOTIFICATION_CANCEL_DELAY);
 						mgr.cancel(NOTIFICATION_ID);
-					
+						
+						
+						
 					sleep(SYNC_DELAY);
 				}
 			} catch (InterruptedException e) {Log.d(TAG, "interrupted exception");}

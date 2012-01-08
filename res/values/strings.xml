@@ -6,4 +6,5 @@
     <string name="sync_notification_title">Supervisor</string>
     <string name="sync_notification_body">Synchronizuję...</string>
     <string name="sync_status_bar_txt">Synchronizacja...</string>
+    <string name="taskList">Lista zadań</string>
 </resources>

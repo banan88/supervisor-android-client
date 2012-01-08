@@ -1,5 +1,6 @@
 package org.supervisor;
 
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -28,10 +29,8 @@ public class DataStorage {
 	static final String C_START_TIME = "start_time";
 	static final String C_VERSION = "version";
 	static final String C_LAST_SYNC = "last_synced";
-	
-	private static final String MONITORING_TABLE = "user_data";
-	static final String C_USERNAME = "username";
-	static final String C_PASS = "password";
+	static final String PENDING_SYNC_TABLE = "pending_sync";
+
 	
 	final DBHelper dbHelper;
 	
@@ -53,8 +52,7 @@ public class DataStorage {
 			db.execSQL(sql);
 			Log.d(TAG, "tasks table created");
 			
-			sql = "CREATE TABLE " + MONITORING_TABLE + " ( " + C_USERNAME + " text, " + 
-				C_PASS + " text);";
+			sql = "CREATE TABLE " + PENDING_SYNC_TABLE + " ( " + C_ID + " integer primary key);";
 			
 			db.execSQL(sql);
 			Log.d(TAG, "monitoring table created");
@@ -64,7 +62,7 @@ public class DataStorage {
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			String sql = "DROP TABLE IF EXISTS " + TASK_TABLE + ";";
 			db.execSQL(sql);
-			sql = "DROP TABLE " + MONITORING_TABLE + ";";
+			sql = "DROP TABLE " + PENDING_SYNC_TABLE + ";";
 			db.execSQL(sql);
 			Log.d(TAG, "tables dropped");
 			
@@ -84,23 +82,33 @@ public class DataStorage {
 	
 	public Cursor getAllTasks() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return db.query(TASK_TABLE, null, null, null, null, null, C_CREATION_TIME + " DESC");		
+		return db.query(TASK_TABLE, null, null, null, null, null, C_LAST_MODIFIED + " DESC");		
 	}
 	
 	public Cursor getTasks(int status) {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		return db.query(TASK_TABLE, null, 
-				"WHERE " + C_STATE + " LIKE " + status, null, null, null, C_CREATION_TIME + " DESC");
+				"WHERE " + C_STATE + " LIKE " + status, null, null, null, C_LAST_MODIFIED + " DESC");
 	}
 	
 	public void insert(ContentValues values) {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		try {
 			db.insertOrThrow(TASK_TABLE, null, values);
-		} catch (SQLException e) { 
-			Log.d(TAG, "exception: " + e.getMessage());
-		} finally {
-			db.close();
+		} catch (SQLException e) {
+			Long id = values.getAsLong(C_ID);
+			Cursor cursor = db.rawQuery("SELECT version FROM " + TASK_TABLE +
+					" WHERE " + C_ID + " = " + Long.toString(id), null);
+			if( cursor != null ) {
+				Long remote_ver = values.getAsLong(C_VERSION);
+				cursor.moveToFirst(); 
+				if(cursor.getLong(0) != remote_ver) {
+					db.update(TASK_TABLE, values, C_ID + " = " + id, null);
+					Log.d(TAG, "duplicate id, task was updated");
+				}
+			}
+			Log.d(TAG, "exception: " + e.getLocalizedMessage());
+			cursor.close();
 		}
 	}
 	
@@ -122,18 +130,21 @@ public class DataStorage {
 					start_time = null;
 				}
 				
-				/*Task task = new Task(c.getLong(0),
+				Task task = new Task(
+						c.getLong(0),
 						c.getString(1),
-						c.getDouble(2),
-						c.getDouble(3),
-						c.getInt(4),
-						c.getString(5),
+						c.getString(2),
+						Double.parseDouble(c.getString(3)),
+						Double.parseDouble(c.getString(4)),
+						Integer.parseInt(c.getString(5)),
 						c.getString(6),
+						c.getString(7),
 						finish_time,
 						start_time,
-						c.getInt(9),
-						c.getString(10));*/
-				return null;
+						Integer.parseInt(c.getString(10)),
+						c.getString(11)
+					);
+				return task;
 			}
 		}
 		return null;
