@@ -3,5 +3,6 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/synchronise" android:title="@string/synchronise_title" android:icon="@drawable/ic_menu_refresh"></item>
     <item android:id="@+id/tasklist" android:title="@string/taskList" android:icon="@android:drawable/ic_menu_agenda"></item>
+    <item android:id="@+id/preferences" android:title="@string/preferences_menu_title" android:icon="@android:drawable/ic_menu_preferences"></item>
     
 </menu>

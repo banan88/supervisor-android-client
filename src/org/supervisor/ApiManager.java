@@ -32,7 +32,7 @@ import android.util.Log;
 public class ApiManager {
 
 	private static final String TAG = ApiManager.class.getSimpleName();
-	private static final String HOST = "http://10.0.2.2:80/";
+	private static final String HOST = "http://10.0.2.2/";
 	private static final int CONN_TIMEOUT = 3000;
 	private static final int MAX_TOTAL_CONN = 10;
 	private static final int MAX_CONN_PER_ROUTE = 10;
@@ -154,6 +154,8 @@ public class ApiManager {
 	
 	
 	public static ArrayList<Task> getTasks(int state) {
+		if( state > 3 || state < 0)
+			throw new IllegalArgumentException("illegal state");
 		HttpGet get = new HttpGet(HOST + "get_tasks/" + Integer.toString(state) + "/");
 		try {
 			get.addHeader(new BasicScheme().authenticate(credentials, get));
@@ -170,6 +172,7 @@ public class ApiManager {
 		date = date.replace('-', 'X');
 		date = date.replace(' ', 'X');
 		date = date.replace(':', 'X');
+		date = date.replace('.', 'X');
 		HttpGet get = new HttpGet(HOST + "get_tasks_since/" + date + "/");
 		try {
 			get.addHeader(new BasicScheme().authenticate(credentials, get));

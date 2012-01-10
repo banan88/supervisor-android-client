@@ -14,6 +14,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".PreferencesActivity" android:label="@string/preferences_menu_title"></activity>
         <service android:name=".SynchronisationService"></service>
 
     </application>

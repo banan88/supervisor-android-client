@@ -91,11 +91,9 @@ public class SynchronisationService extends Service {
 							values.put(DataStorage.C_VERSION, task.getVersion());
 							values.put(DataStorage.C_LAST_SYNC, task.getLastSynced());
 							dataStorage.insert(values);
+							Log.d(TAG, "attempting to insert into db");
 						}
 						dataStorage.close();
-						
-						
-						Log.d(TAG, Integer.toString(ApiManager.getTasksSince(ApiManager.getLastSyncTime()).size()));
 						
 						
 						sleep(NOTIFICATION_CANCEL_DELAY);

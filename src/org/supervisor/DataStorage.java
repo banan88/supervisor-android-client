@@ -96,6 +96,7 @@ public class DataStorage {
 		try {
 			db.insertOrThrow(TASK_TABLE, null, values);
 		} catch (SQLException e) {
+			Log.d(TAG, "exception: " + e.getLocalizedMessage());
 			Long id = values.getAsLong(C_ID);
 			Cursor cursor = db.rawQuery("SELECT version FROM " + TASK_TABLE +
 					" WHERE " + C_ID + " = " + Long.toString(id), null);
@@ -107,7 +108,6 @@ public class DataStorage {
 					Log.d(TAG, "duplicate id, task was updated");
 				}
 			}
-			Log.d(TAG, "exception: " + e.getLocalizedMessage());
 			cursor.close();
 		}
 	}

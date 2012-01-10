@@ -31,8 +31,13 @@ public class BaseActivity extends Activity {
 						//getString(R.string.dialog_text), true);
 				Toast.makeText(this, R.string.dialog_text, Toast.LENGTH_SHORT).show();	
 				break;
+				
 			case R.id.tasklist:
 				startActivity(new Intent(this, TasksActivity.class));
+			break;
+			
+			case R.id.preferences:
+				startActivity(new Intent(this, PreferencesActivity.class));
 		}
 		return true;
 	}

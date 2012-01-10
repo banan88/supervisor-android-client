@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="sync_time_array_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+    
+     <string-array name="sync_time_array_entries">
+        <item>"co 5 minut"</item>
+        <item>"co 10 minut"</item>
+        <item>"co 15 minut"</item>
+        <item>"co 30 minut"</item>
+        <item>"co 60 minut"</item>
+        <item>"Wyłączona"</item>
+    </string-array>
+    
+</resources>

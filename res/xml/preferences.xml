@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<EditTextPreference android:key="username" android:title="@string/username_title" android:summary="@string/username_hint" > </EditTextPreference>
+<EditTextPreference android:key="password" android:title="@string/password_title" android:summary="@string/password_hint" android:password="true"></EditTextPreference>
+<EditTextPreference android:title="@string/server_url_title" android:summary="@string/server_url_hint" android:enabled="true" android:key="server"></EditTextPreference>
+<ListPreference android:key="sync" android:title="@string/sync_pref_title_short" android:entries="@array/sync_time_array_entries" android:entryValues="@array/sync_time_array_values"></ListPreference>
+    
+</PreferenceScreen>
