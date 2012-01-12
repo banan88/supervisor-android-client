@@ -1,7 +1,10 @@
 package org.supervisor;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
+import android.accounts.NetworkErrorException;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -9,7 +12,9 @@ import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 
@@ -24,6 +29,7 @@ public class SynchronisationService extends Service {
 	private int NOTIFICATION_ID = 1;
 	private NotificationManager mgr;
 	private DataStorage dataStorage;
+	private SharedPreferences prefs;
 	
 	public IBinder onBind(Intent intent) {
 		return null;
@@ -63,47 +69,86 @@ public class SynchronisationService extends Service {
 			Log.d(TAG, "run");
 			try{
 				while(true){
-					
+						
+						prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+						String username = prefs.getString(PreferencesActivity.username_pref_key, null);
+						String password = prefs.getString(PreferencesActivity.password_pref_key, null);
+						URL server = null;
+						ApiManager.setCredentials(username, password);
+						String adress = "http://" + prefs.getString(PreferencesActivity.server_pref_key, null) +"/";
+						try {
+							new URL(adress);
+						} catch (MalformedURLException e) {
+							Log.d(TAG, adress);
+							Log.d(TAG, e.getMessage());
+						}
+						Log.d(TAG,adress);
+						ApiManager.HOST = adress;
+						//http://developer.android.com/resources/samples/ApiDemos/src/com/example/android/apis/app/RemoteService.html
+							
 						String ns = Context.NOTIFICATION_SERVICE;
 						mgr = (NotificationManager) getSystemService(ns);
 						int icon = R.drawable.ic_menu_refresh;
-						Notification not = new Notification(icon, getString(R.string.sync_status_bar_txt), System.currentTimeMillis());
-						PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, null, 0);
-						not.setLatestEventInfo(getApplicationContext(), getString(R.string.sync_notification_title),
-								getString(R.string.sync_notification_body), pi);
-						mgr.notify(NOTIFICATION_ID, not);
-						
-						ApiManager.setCredentials("robol", "robol");
-						
-						ArrayList<Task> tasks = ApiManager.getTasksSince(ApiManager.getLastSyncTime());
-						ContentValues values = new ContentValues();
-						for (Task task : tasks) {
-							values.put(DataStorage.C_ID, task.getId());
-							values.put(DataStorage.C_NAME, task.getName());
-							values.put(DataStorage.C_DESC, task.getDescription());
-							values.put(DataStorage.C_LAT, task.getLatitude());
-							values.put(DataStorage.C_LON, task.getLongitude());
-							values.put(DataStorage.C_STATE, task.getState());
-							values.put(DataStorage.C_CREATION_TIME, task.getCreationTime());
-							values.put(DataStorage.C_LAST_MODIFIED, task.getLastModified());
-							values.put(DataStorage.C_FINISH_TIME, task.getFinishTime());
-							values.put(DataStorage.C_START_TIME, task.getStartTime());
-							values.put(DataStorage.C_VERSION, task.getVersion());
-							values.put(DataStorage.C_LAST_SYNC, task.getLastSynced());
-							dataStorage.insert(values);
-							Log.d(TAG, "attempting to insert into db");
+									
+						String status_text = getString(R.string.sync_status_bar_txt);
+						String text = getString(R.string.sync_notification_body);
+						String title = getString(R.string.sync_notification_title);
+						ArrayList<Task> tasks = null;
+						Intent intent = null;
+						boolean request_ok = true;
+							
+						try {
+							try {
+								tasks = ApiManager.getTasks(); //actual rest call
+							} catch (IllegalArgumentException e) {
+								throw new NetworkErrorException("404");
+							}
+								
+						} catch (NetworkErrorException e) {
+							Log.d(TAG, e.getMessage());
+							intent = new Intent(getApplicationContext(), PreferencesActivity.class);
+							status_text = getString(R.string.sync_status_bar_txt_error);
+							if (e.getMessage().equals("404"))
+								text = getString(R.string.sync_notification_body_ser_err);
+							else
+								text = getString(R.string.sync_notification_body_err);
+							request_ok = false;
 						}
+							
+						Notification not = new Notification(icon, status_text, System.currentTimeMillis());
+						not.flags |= Notification.FLAG_AUTO_CANCEL;
+						PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+						not.setLatestEventInfo(getApplicationContext(), title,
+								text, pi);
+						mgr.notify(NOTIFICATION_ID, not);
+							
+						ContentValues values = new ContentValues();
+						if (tasks != null)
+							for (Task task : tasks) {
+								Log.d(TAG, "attempting to insert into db");
+								values.put(DataStorage.C_ID, task.getId());
+								values.put(DataStorage.C_NAME, task.getName());
+								values.put(DataStorage.C_DESC, task.getDescription());
+								values.put(DataStorage.C_LAT, task.getLatitude());
+								values.put(DataStorage.C_LON, task.getLongitude());
+								values.put(DataStorage.C_STATE, task.getState());
+								values.put(DataStorage.C_CREATION_TIME, task.getCreationTime());
+								values.put(DataStorage.C_LAST_MODIFIED, task.getLastModified());
+								values.put(DataStorage.C_FINISH_TIME, task.getFinishTime());
+								values.put(DataStorage.C_START_TIME, task.getStartTime());
+								values.put(DataStorage.C_VERSION, task.getVersion());
+								values.put(DataStorage.C_LAST_SYNC, task.getLastSynced());
+								dataStorage.insert(values);		
+							}
 						dataStorage.close();
 						
-						
-						sleep(NOTIFICATION_CANCEL_DELAY);
-						mgr.cancel(NOTIFICATION_ID);
-						
-						
-						
+						if(request_ok) {
+							sleep(NOTIFICATION_CANCEL_DELAY);
+							mgr.cancel(NOTIFICATION_ID);
+						}	
 					sleep(SYNC_DELAY);
 				}
-			} catch (InterruptedException e) {Log.d(TAG, "interrupted exception");}
+			} catch (InterruptedException e) {Log.d(TAG, "interrupted exception"); }
 		}
 		
 	}

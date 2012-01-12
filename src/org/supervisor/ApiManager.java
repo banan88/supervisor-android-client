@@ -27,23 +27,41 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.accounts.NetworkErrorException;
 import android.util.Log;
 
 public class ApiManager {
 
 	private static final String TAG = ApiManager.class.getSimpleName();
-	private static final String HOST = "http://10.0.2.2/";
 	private static final int CONN_TIMEOUT = 3000;
 	private static final int MAX_TOTAL_CONN = 10;
 	private static final int MAX_CONN_PER_ROUTE = 10;
 	private static UsernamePasswordCredentials credentials;
 	private static HttpClient httpClient = clientFactory();
+	public static String HOST;
 	public static final int DONE_TASKS = 3;
 	public static final int CURRENT_TASKS = 2;
 	public static final int PENDING_TASKS = 1;
 	
 	public static void setCredentials(String username, String password) {
 		credentials = new UsernamePasswordCredentials(username, password);
+	}
+	
+	public static boolean testConnParameters() throws NetworkErrorException{ //should be dependant on network state
+		HttpGet get = new HttpGet(HOST + "test/");
+		try {
+			get.addHeader(new BasicScheme().authenticate(credentials, get));
+		} catch (AuthenticationException e) {
+			Log.d(TAG, e.getMessage());
+		}
+		try {
+			if (apiCall(get).equals("True"))
+				return true;
+			else
+				return false;
+		} catch (NullPointerException e) {
+			return false;
+		}
 	}
 	
 	private static DefaultHttpClient clientFactory() {
@@ -61,18 +79,21 @@ public class ApiManager {
 		return client;
 	}
 	
-	private static String apiCall(HttpRequestBase method) {
+	private static String apiCall(HttpRequestBase method) throws NetworkErrorException{
 		
 		if (credentials == null) {
 			return "call setCredentials(user, pass) first!";
 		}
 		String result = null;
 		try {
-		HttpResponse response = httpClient.execute(method);
-		int httpStatus = response.getStatusLine().getStatusCode();
+			Log.d(TAG, HOST);
+			HttpResponse response = httpClient.execute(method);
+			int httpStatus = response.getStatusLine().getStatusCode();
 		
-			if (httpStatus != 200) 
-				throw new IOException(Integer.toString(httpStatus)); 
+			if (httpStatus != 200) {
+				Log.d(TAG, Integer.toString(httpStatus));
+					throw new NetworkErrorException(Integer.toString(httpStatus));
+			}
 			HttpEntity entity = response.getEntity();
 			InputStream stream = entity.getContent();
 			if(entity != null)
@@ -84,6 +105,7 @@ public class ApiManager {
 			}
 		} catch (IOException e) {
 			Log.d(TAG, e.getMessage());
+			throw new NetworkErrorException("404");
 		}
 		return result;
 	}
@@ -141,7 +163,7 @@ public class ApiManager {
 	}
 	
 	
-	public static ArrayList<Task> getTasks() {
+	public static ArrayList<Task> getTasks() throws NetworkErrorException {
 		
 		HttpGet get = new HttpGet(HOST + "get_tasks/");
 		try {
@@ -153,7 +175,7 @@ public class ApiManager {
 	}
 	
 	
-	public static ArrayList<Task> getTasks(int state) {
+	public static ArrayList<Task> getTasks(int state) throws NetworkErrorException {
 		if( state > 3 || state < 0)
 			throw new IllegalArgumentException("illegal state");
 		HttpGet get = new HttpGet(HOST + "get_tasks/" + Integer.toString(state) + "/");
@@ -166,7 +188,7 @@ public class ApiManager {
 	}
 	
 	
-	public static ArrayList<Task> getTasksSince(String date) {
+	public static ArrayList<Task> getTasksSince(String date) throws NetworkErrorException {
 		// YYYY-MM-DD hh:mm:ss -format
 		date = date.replace('"', ' ').trim();
 		date = date.replace('-', 'X');
@@ -182,7 +204,7 @@ public class ApiManager {
 		return buildTaskList(apiCall(get));
 	}
 	
-	public static void changeTaskState(int task_id, int state) {
+	public static void changeTaskState(int task_id, int state) throws NetworkErrorException {
 		HttpGet get = new HttpGet(HOST + "change_task_state/" + Integer.toString(task_id) +
 				"/" + Integer.toString(state) + "/");
 		try {
@@ -193,7 +215,7 @@ public class ApiManager {
 		apiCall(get);
 	}
 	
-	public static String getLastSyncTime() {
+	public static String getLastSyncTime() throws NetworkErrorException {
 		HttpGet get = new HttpGet(HOST + "get_last_sync_time/");
 		try {
 			get.addHeader(new BasicScheme().authenticate(credentials, get));
@@ -203,7 +225,7 @@ public class ApiManager {
 		return apiCall(get);
 	}
 	
-	public static HashMap<String, Long> checkUpdates(int rowLimit) {
+	public static HashMap<String, Long> checkUpdates(int rowLimit) throws NetworkErrorException {
 		HttpGet get = new HttpGet(HOST + "check_updates/" + Integer.toString(rowLimit) + "/");
 		try {
 			get.addHeader(new BasicScheme().authenticate(credentials, get));
@@ -211,7 +233,7 @@ public class ApiManager {
 			Log.d(TAG, e.getMessage());
 		}
 		return buildUpdatesList(apiCall(get));
-	} //android ma porownac numery wersji i odeslac liste pk w jsonie, potem pobrac zadania o tym pk
+	} 
 	
 	//public static taskFinished
 }
