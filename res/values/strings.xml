@@ -23,4 +23,5 @@
     <string name="sync_status_bar_txt_error">Synchronizacja: Wystąpił błąd</string>
     <string name="sync_notification_body_err">Nieprawidłowe dane użytkownika</string>
     <string name="sync_notification_body_ser_err">Nie odnaleziono serwera</string>
+    <string name="dialog_text_no_network">Brak połączenia z Internetem</string>
 </resources>

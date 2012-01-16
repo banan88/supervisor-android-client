@@ -1,12 +1,12 @@
 package org.supervisor;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
-import android.util.Log;
 
 public class PreferencesActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener{
 	
@@ -16,16 +16,17 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 	public static final String server_pref_key = "server";
 	public static final String username_pref_key = "username";
 	public static final String password_pref_key = "password";
+	public static final String TAG = PreferencesActivity.class.getSimpleName();
+	private boolean init;
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		savedInstanceState.getBoolean( --here check if its init (first app run))
 		addPreferencesFromResource(R.xml.preferences);
 		lpref = (ListPreference)findPreference(sync_pref_key);
 		lpref.setSummary(lpref.getEntry());
 		
 		pref = (EditTextPreference) findPreference(server_pref_key);
-		Log.d("test", pref.toString());
 		if (pref.getText() != null && !pref.getText().trim().equals(""))
 			pref.setSummary(pref.getText());
 		
@@ -57,6 +58,10 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 		if (key.equals(sync_pref_key)) {
 			lpref = (ListPreference) findPreference(key);
 			lpref.setSummary(lpref.getEntry());
+			if(!lpref.getValue().equals("5"))
+				startService(new Intent(this, SynchronisationService.class));
+			else
+				stopService(new Intent(this, SynchronisationService.class));
 		}
 		
 		else if (key.equals(server_pref_key)) {
@@ -76,7 +81,6 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 			if(!pref.getText().trim().equals(""))
 				pref.setSummary(null);
 		}
-		
 	}
 
 

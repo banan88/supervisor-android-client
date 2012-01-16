@@ -13,6 +13,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -24,31 +26,40 @@ public class SynchronisationService extends Service {
 
 	private static final String TAG = SynchronisationService.class.getSimpleName();
 	private SynchronisationThread thread;
-	private long SYNC_DELAY = 360000; //6min
 	private long NOTIFICATION_CANCEL_DELAY = 1000; //1s after GET
 	private int NOTIFICATION_ID = 1;
 	private NotificationManager mgr;
 	private DataStorage dataStorage;
 	private SharedPreferences prefs;
+	private String status_text;
+	private String text;
+	private String title;
 	
 	public IBinder onBind(Intent intent) {
 		return null;
 	}
+	
 	
 	public void onCreate(){
 		super.onCreate();
 		thread = new SynchronisationThread();
 		Log.d(TAG, "onCreate() called");
 		dataStorage = new DataStorage(this);
+		status_text = getString(R.string.sync_status_bar_txt);
+		text = getString(R.string.sync_notification_body);
+		title = getString(R.string.sync_notification_title);
 	}
+	
 	
 	public void onDestroy() {
 		super.onDestroy();
 		thread.interrupt();
 		thread = null;
-		Log.d(TAG, "onDestroy() called");
+		dataStorage.close();
+		Log.d(TAG, "SERVICE STOPPED : onDestroy() called");
 	}
 
+	
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		super.onStartCommand(intent, flags, startId);
 		if(thread.isAlive()) { //forced synchronisation
@@ -56,10 +67,17 @@ public class SynchronisationService extends Service {
 			thread = new SynchronisationThread();
 		} 
 			thread.start();
-		Log.d(TAG, "onStartCommand() called");
+		Log.d(TAG, "SERVICE STARTED : onStartCommand() called");
 		return START_STICKY;
 	}
 
+	
+	private boolean isNetworkOn(Context context) {
+		NetworkInfo networkInfo = ((ConnectivityManager) context
+				.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+		return !(networkInfo == null || !networkInfo.isConnected());
+	}
+	
 
 	private class SynchronisationThread extends Thread {
 		
@@ -68,12 +86,41 @@ public class SynchronisationService extends Service {
 		public void run() {
 			Log.d(TAG, "run");
 			try{
-				while(true){
+				boolean keep_alive = true; 
+				do{
+					prefs = PreferenceManager.getDefaultSharedPreferences(SynchronisationService.this);
+					Long sync_delay = null;
+					int sync_option = Integer.parseInt(prefs.getString(PreferencesActivity.sync_pref_key, "4"));
+					
+					Log.d(TAG, Integer.toString(sync_option));
+					switch (sync_option) {
+						case 0:
+							sync_delay = new Long(300000);
+							break;
+						case 1:
+							sync_delay = new Long(600000);
+							break;
+						case 2:
+							sync_delay = new Long(900000);
+							break;
+						case 3:
+							sync_delay = new Long(1800000);
+							break;
+						case 4:
+							sync_delay = new Long(3600000);
+							break;
+						case 5:
+							keep_alive = false;
+							break;
+						case 6:
+							sync_delay = new Long(10000);
+							break;
 						
-						prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+					}
+					if( isNetworkOn(SynchronisationService.this)) {
+						Log.d(TAG, "Network on!");
 						String username = prefs.getString(PreferencesActivity.username_pref_key, null);
 						String password = prefs.getString(PreferencesActivity.password_pref_key, null);
-						URL server = null;
 						ApiManager.setCredentials(username, password);
 						String adress = "http://" + prefs.getString(PreferencesActivity.server_pref_key, null) +"/";
 						try {
@@ -82,17 +129,11 @@ public class SynchronisationService extends Service {
 							Log.d(TAG, adress);
 							Log.d(TAG, e.getMessage());
 						}
-						Log.d(TAG,adress);
 						ApiManager.HOST = adress;
-						//http://developer.android.com/resources/samples/ApiDemos/src/com/example/android/apis/app/RemoteService.html
-							
 						String ns = Context.NOTIFICATION_SERVICE;
 						mgr = (NotificationManager) getSystemService(ns);
 						int icon = R.drawable.ic_menu_refresh;
 									
-						String status_text = getString(R.string.sync_status_bar_txt);
-						String text = getString(R.string.sync_notification_body);
-						String title = getString(R.string.sync_notification_title);
 						ArrayList<Task> tasks = null;
 						Intent intent = null;
 						boolean request_ok = true;
@@ -106,7 +147,7 @@ public class SynchronisationService extends Service {
 								
 						} catch (NetworkErrorException e) {
 							Log.d(TAG, e.getMessage());
-							intent = new Intent(getApplicationContext(), PreferencesActivity.class);
+							intent = new Intent(SynchronisationService.this, PreferencesActivity.class);
 							status_text = getString(R.string.sync_status_bar_txt_error);
 							if (e.getMessage().equals("404"))
 								text = getString(R.string.sync_notification_body_ser_err);
@@ -114,14 +155,14 @@ public class SynchronisationService extends Service {
 								text = getString(R.string.sync_notification_body_err);
 							request_ok = false;
 						}
-							
+								
 						Notification not = new Notification(icon, status_text, System.currentTimeMillis());
 						not.flags |= Notification.FLAG_AUTO_CANCEL;
-						PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-						not.setLatestEventInfo(getApplicationContext(), title,
+						PendingIntent pi = PendingIntent.getActivity(SynchronisationService.this, 0, intent, 0);
+						not.setLatestEventInfo(SynchronisationService.this, title,
 								text, pi);
 						mgr.notify(NOTIFICATION_ID, not);
-							
+			
 						ContentValues values = new ContentValues();
 						if (tasks != null)
 							for (Task task : tasks) {
@@ -141,14 +182,23 @@ public class SynchronisationService extends Service {
 								dataStorage.insert(values);		
 							}
 						dataStorage.close();
-						
+							
 						if(request_ok) {
 							sleep(NOTIFICATION_CANCEL_DELAY);
 							mgr.cancel(NOTIFICATION_ID);
 						}	
-					sleep(SYNC_DELAY);
-				}
-			} catch (InterruptedException e) {Log.d(TAG, "interrupted exception"); }
+					} // network available condition ends here
+					
+					if(keep_alive) //wait for set amount of time and run thread again
+						sleep(sync_delay);
+					//check again if keep_alive didn't change
+					keep_alive = (prefs.getString(PreferencesActivity.sync_pref_key, "4").equals("5")) ? false : true;
+					Log.d(TAG, Boolean.toString(keep_alive));
+				} while (keep_alive);
+				SynchronisationService.this.stopSelf(); //stop service if it was forced (1-time) sync
+			} catch (InterruptedException e) {
+				Log.d(TAG, "interrupted exception");
+			}
 		}
 		
 	}
