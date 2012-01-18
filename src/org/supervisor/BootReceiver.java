@@ -13,6 +13,8 @@ public class BootReceiver extends BroadcastReceiver {
 		
 		
 			Log.d("bootreceiver", "boot receiver started service");
-			context.startService(new Intent(context, SynchronisationService.class));
+			SupervisorApplication global_app = (SupervisorApplication) context.getApplicationContext();
+			if(!global_app.getSyncPeriod().equals("5"))
+				context.startService(new Intent(context, SynchronisationService.class));
 	}
 }

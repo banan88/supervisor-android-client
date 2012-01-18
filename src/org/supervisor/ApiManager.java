@@ -3,7 +3,6 @@ package org.supervisor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -44,8 +43,12 @@ public class ApiManager {
 	public static final int PENDING_TASKS = 1;
 	
 	public static void setCredentials(String username, String password) {
-		credentials = new UsernamePasswordCredentials(username, password);
+		if (username != null && password != null) 
+			credentials = new UsernamePasswordCredentials(username, password);
+		else
+			credentials = new UsernamePasswordCredentials("", "");
 	}
+
 	
 	public static boolean testConnParameters() throws NetworkErrorException{ //should be dependant on network state
 		HttpGet get = new HttpGet(HOST + "test/");
@@ -89,10 +92,9 @@ public class ApiManager {
 			Log.d(TAG, HOST);
 			HttpResponse response = httpClient.execute(method);
 			int httpStatus = response.getStatusLine().getStatusCode();
-		
 			if (httpStatus != 200) {
-				Log.d(TAG, Integer.toString(httpStatus));
-					throw new NetworkErrorException(Integer.toString(httpStatus));
+				Log.d(TAG, Integer.toString(httpStatus)+"lololo");
+				throw new NetworkErrorException(Integer.toString(httpStatus));
 			}
 			HttpEntity entity = response.getEntity();
 			InputStream stream = entity.getContent();
@@ -146,32 +148,18 @@ public class ApiManager {
 		return tasks;
 	}
 	
-	private static HashMap<String, Long> buildUpdatesList(String jsonString) {
-		HashMap<String, Long> map = new HashMap<String, Long>();
-		if (jsonString != null)
+	public static ArrayList<Task> getTasks() throws NetworkErrorException {
+		try {
+			HttpGet get = new HttpGet(HOST + "get_tasks/");
 			try {
-				JSONArray array = new JSONArray(jsonString);
-				JSONObject dict;
-				for(int i=0; i < array.length(); ++i) {
-					dict = array.getJSONObject(i);
-					map.put(dict.getString("pk"), dict.getLong("version"));
-				}
-			} catch (JSONException e) {
+				get.addHeader(new BasicScheme().authenticate(credentials, get));
+			} catch (AuthenticationException e) {
 				Log.d(TAG, e.getMessage());
 			}
-		return map;
-	}
-	
-	
-	public static ArrayList<Task> getTasks() throws NetworkErrorException {
-		
-		HttpGet get = new HttpGet(HOST + "get_tasks/");
-		try {
-			get.addHeader(new BasicScheme().authenticate(credentials, get));
-		} catch (AuthenticationException e) {
-			Log.d(TAG, e.getMessage());
+			return buildTaskList(apiCall(get));
+		} catch (NullPointerException e) {
+			throw new NetworkErrorException("404");
 		}
-		return buildTaskList(apiCall(get));
 	}
 	
 	
@@ -195,45 +183,47 @@ public class ApiManager {
 		date = date.replace(' ', 'X');
 		date = date.replace(':', 'X');
 		date = date.replace('.', 'X');
-		HttpGet get = new HttpGet(HOST + "get_tasks_since/" + date + "/");
 		try {
-			get.addHeader(new BasicScheme().authenticate(credentials, get));
-		} catch (AuthenticationException e) {
-			Log.d(TAG, e.getMessage());
-		}
+			HttpGet get = new HttpGet(HOST + "get_tasks_since/" + date + "/");
+			try {
+				get.addHeader(new BasicScheme().authenticate(credentials, get));
+			} catch (AuthenticationException e) {
+				Log.d(TAG, e.getMessage());
+			}
 		return buildTaskList(apiCall(get));
+		} catch (NullPointerException e) {
+			throw new NetworkErrorException("404");
+		}
 	}
 	
 	public static void changeTaskState(int task_id, int state) throws NetworkErrorException {
-		HttpGet get = new HttpGet(HOST + "change_task_state/" + Integer.toString(task_id) +
-				"/" + Integer.toString(state) + "/");
 		try {
-			get.addHeader(new BasicScheme().authenticate(credentials, get));
-		} catch (AuthenticationException e) {
-			Log.d(TAG, e.getMessage());
+			HttpGet get = new HttpGet(HOST + "change_task_state/" + Integer.toString(task_id) +
+					"/" + Integer.toString(state) + "/");
+			try {
+				get.addHeader(new BasicScheme().authenticate(credentials, get));
+			} catch (AuthenticationException e) {
+				Log.d(TAG, e.getMessage());
+			}
+			apiCall(get);
+		} catch (NullPointerException e) {
+			throw new NetworkErrorException("404");
 		}
-		apiCall(get);
 	}
 	
 	public static String getLastSyncTime() throws NetworkErrorException {
-		HttpGet get = new HttpGet(HOST + "get_last_sync_time/");
 		try {
-			get.addHeader(new BasicScheme().authenticate(credentials, get));
-		} catch (AuthenticationException e) {
-			Log.d(TAG, e.getMessage());
+			HttpGet get = new HttpGet(HOST + "get_last_sync_time/");
+			try {
+				get.addHeader(new BasicScheme().authenticate(credentials, get));
+			} catch (AuthenticationException e) {
+				Log.d(TAG, e.getMessage());
+			}
+			return apiCall(get);
+		} catch (NullPointerException e) {
+			throw new NetworkErrorException("404");
 		}
-		return apiCall(get);
 	}
-	
-	public static HashMap<String, Long> checkUpdates(int rowLimit) throws NetworkErrorException {
-		HttpGet get = new HttpGet(HOST + "check_updates/" + Integer.toString(rowLimit) + "/");
-		try {
-			get.addHeader(new BasicScheme().authenticate(credentials, get));
-		} catch (AuthenticationException e) {
-			Log.d(TAG, e.getMessage());
-		}
-		return buildUpdatesList(apiCall(get));
-	} 
 	
 	//public static taskFinished
 }

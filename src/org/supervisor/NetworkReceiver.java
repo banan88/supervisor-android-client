@@ -17,7 +17,9 @@ public class NetworkReceiver extends BroadcastReceiver {
 		
 		if(connected) {
 			Log.d("netreceiver", "net receiver started service");
-			context.startService(new Intent(context, SynchronisationService.class));
+			SupervisorApplication global_app = (SupervisorApplication) context.getApplicationContext();
+			if(!global_app.getSyncPeriod().equals("5"))
+				context.startService(new Intent(context, SynchronisationService.class));
 		}
 		else {
 			Log.d("netreceiver", "net receiver stopped service");

@@ -1,12 +1,11 @@
 package org.supervisor;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.Toast;
 
 public class TasksActivity extends BaseActivity {
 	
@@ -14,6 +13,7 @@ public class TasksActivity extends BaseActivity {
 	private SimpleCursorAdapter adapter;
 	private Cursor cursor;
 	private ListView taskList;
+	private SupervisorApplication global_app;
 	private static final String []FROM = {DataStorage.C_NAME, 
 		DataStorage.C_DESC, DataStorage.C_LAST_MODIFIED};
 	private static final int []TO = {R.id.taskName, 
@@ -28,13 +28,11 @@ public class TasksActivity extends BaseActivity {
          * we launch preferences activity - 
          * which after user fills server adress - starts the sync service
          */
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		String server = prefs.getString(PreferencesActivity.server_pref_key, null);
-		String username = prefs.getString(PreferencesActivity.username_pref_key, null);
-		String password = prefs.getString(PreferencesActivity.password_pref_key, null);
-		if(server == null || username == null || password == null) {
-			Intent intent = new Intent(this, PreferencesActivity.class).putE;
+        global_app = (SupervisorApplication) getApplication();
+		if(global_app.getServerURL() == null || global_app.getUsername() == null || global_app.getPassword() == null) {
+			Intent intent = new Intent(this, PreferencesActivity.class);
 			startActivity(intent);
+			Toast.makeText(this, R.string.no_config, Toast.LENGTH_LONG).show();
 		}
 		
         setContentView(R.layout.tasklist);
@@ -43,7 +41,7 @@ public class TasksActivity extends BaseActivity {
     
     
     private void setUp() {
-    	dataStorage = new DataStorage(this);
+    	dataStorage = global_app.getDataStorage();
        	cursor = dataStorage.getAllTasks();
        	startManagingCursor(cursor);
        	adapter = new SimpleCursorAdapter(this, R.layout.tasklist_item, cursor, FROM, TO); //
@@ -53,12 +51,19 @@ public class TasksActivity extends BaseActivity {
     
     public void onDestroy() {
     	super.onDestroy();
-    	dataStorage.close();
     }
     
     public void onResume() {
     	super.onResume();
     	setUp();
     }
+
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+	}
+    
+    
    
 }

@@ -17,11 +17,9 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 	public static final String username_pref_key = "username";
 	public static final String password_pref_key = "password";
 	public static final String TAG = PreferencesActivity.class.getSimpleName();
-	private boolean init;
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		savedInstanceState.getBoolean( --here check if its init (first app run))
 		addPreferencesFromResource(R.xml.preferences);
 		lpref = (ListPreference)findPreference(sync_pref_key);
 		lpref.setSummary(lpref.getEntry());
@@ -54,13 +52,10 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
-		
+		lpref = (ListPreference) findPreference(sync_pref_key);
 		if (key.equals(sync_pref_key)) {
-			lpref = (ListPreference) findPreference(key);
 			lpref.setSummary(lpref.getEntry());
-			if(!lpref.getValue().equals("5"))
-				startService(new Intent(this, SynchronisationService.class));
-			else
+			if(lpref.getValue().equals("5") || ((SupervisorApplication) getApplication()).isNetworkOn() == false)
 				stopService(new Intent(this, SynchronisationService.class));
 		}
 		
@@ -81,6 +76,8 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 			if(!pref.getText().trim().equals(""))
 				pref.setSummary(null);
 		}
+		if (!lpref.getValue().equals("5") && ((SupervisorApplication) getApplication()).isNetworkOn() == true)
+			startService(new Intent(this, SynchronisationService.class));
 	}
 
 
