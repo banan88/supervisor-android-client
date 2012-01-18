@@ -177,7 +177,7 @@ public class ApiManager {
 	
 	
 	public static ArrayList<Task> getTasksSince(String date) throws NetworkErrorException {
-		// YYYY-MM-DD hh:mm:ss -format
+		// YYYY-MM-DD hh:mm:ss.m -format
 		date = date.replace('"', ' ').trim();
 		date = date.replace('-', 'X');
 		date = date.replace(' ', 'X');

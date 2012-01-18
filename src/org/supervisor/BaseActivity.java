@@ -3,6 +3,9 @@ package org.supervisor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import android.accounts.NetworkErrorException;
 import android.app.Activity;
@@ -84,10 +87,17 @@ public class BaseActivity extends Activity {
 				
 				ArrayList<Task> tasks = null;
 				Intent intent = null;
-					
+				
 				try {
 					try {
-						tasks = ApiManager.getTasks(); //actual rest call
+						if(global_app.getDataStorage().isEmpty()) {
+							DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.m");
+							String week_ago = dateFormat.format(new Date(new Date().getTime() - 10*24*60*60*1000));
+							tasks = ApiManager.getTasksSince(week_ago); 
+						}
+						else {
+							tasks = ApiManager.getTasksSince(ApiManager.getLastSyncTime());
+						}
 					} catch (IllegalArgumentException e) {
 						throw new NetworkErrorException(e.getMessage());
 					}
@@ -101,11 +111,9 @@ public class BaseActivity extends Activity {
 						text = getString(R.string.sync_notification_body_ser_err);
 					isRequestOk = false;
 				}
-						
+				
 				global_app.generateNotification(new String[]{status_text, title, text}, icon, 2000, !isRequestOk, intent);
-				Log.d(TAG + " IS DB EMPTY:", Boolean.toString(global_app.getDataStorage().isEmpty()));
 				global_app.insertTaskUpdates(tasks);
-				Log.d(TAG + " IS DB EMPTY:", Boolean.toString(global_app.getDataStorage().isEmpty()));
 					
 			}
 			return null;

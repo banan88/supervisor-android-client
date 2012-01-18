@@ -74,7 +74,6 @@ public class SupervisorApplication extends Application {
 						try {
 							sleep(tmp);
 						} catch (InterruptedException e) {
-							Log.d(TAG, e.getMessage());
 							mgr.cancel(1);
 						}
 						mgr.cancel(1);

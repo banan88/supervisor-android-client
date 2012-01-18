@@ -2,7 +2,10 @@ package org.supervisor;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import android.accounts.NetworkErrorException;
 import android.app.Service;
@@ -107,7 +110,14 @@ public class SynchronisationService extends Service {
 							
 						try {
 							try {
-								tasks = ApiManager.getTasks(); //actual rest call
+								if(global_app.getDataStorage().isEmpty()) {
+									DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.m");
+									String week_ago = dateFormat.format(new Date(new Date().getTime() - 10*24*60*60*1000));
+									tasks = ApiManager.getTasksSince(week_ago); 
+								}
+								else {
+									tasks = ApiManager.getTasksSince(ApiManager.getLastSyncTime());
+								}
 							} catch (IllegalArgumentException e) {
 								throw new NetworkErrorException(e.getMessage());
 							}
