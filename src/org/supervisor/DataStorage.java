@@ -30,7 +30,6 @@ public class DataStorage {
 	static final String C_VERSION = "version";
 	static final String C_LAST_SYNC = "last_synced";
 	static final String PENDING_SYNC_TABLE = "pending_sync";
-
 	
 	final DBHelper dbHelper;
 	
@@ -69,6 +68,20 @@ public class DataStorage {
 			onCreate(db);
 		}
 		
+	}
+	
+	public boolean isEmpty() {
+		String sql = "SELECT Count(" + C_ID + ") from " + TASK_TABLE + ";";
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		Cursor c = db.rawQuery(sql, null);
+		boolean result = false;
+		if (c != null){
+		    c.moveToFirst();
+		    if (c.getInt(0) == 0) 
+		      result = true;
+		    c.close();
+		}
+		return result;
 	}
 	
 	public DataStorage(Context context) {

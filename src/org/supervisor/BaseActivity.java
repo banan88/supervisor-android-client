@@ -103,7 +103,9 @@ public class BaseActivity extends Activity {
 				}
 						
 				global_app.generateNotification(new String[]{status_text, title, text}, icon, 2000, !isRequestOk, intent);
+				Log.d(TAG + " IS DB EMPTY:", Boolean.toString(global_app.getDataStorage().isEmpty()));
 				global_app.insertTaskUpdates(tasks);
+				Log.d(TAG + " IS DB EMPTY:", Boolean.toString(global_app.getDataStorage().isEmpty()));
 					
 			}
 			return null;
