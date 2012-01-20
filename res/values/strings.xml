@@ -27,4 +27,8 @@
     <string name="sync_notification_body_ser_err">Nie odnaleziono serwera</string>
     <string name="dialog_text_no_network">Brak połączenia z Internetem</string>
     <string name="no_config">Witamy. Wprowadź ustawienia połączenia.</string>
+    <string name="subtitle_active_task">Aktywne zadanie</string>
+    <string name="subtitle_tasks_list">Lista zadań</string>
+    <string name="subtitle_task_archive">Archiwum zadań</string>
+    <string name="subtitle_time">Czas pracy</string>
 </resources>

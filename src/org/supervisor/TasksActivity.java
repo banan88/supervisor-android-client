@@ -11,7 +11,6 @@ public class TasksActivity extends BaseActivity {
 	private SimpleCursorAdapter adapter;
 	private Cursor cursor;
 	private ListView taskList;
-	private SupervisorApplication global_app;
 	private static final String []FROM = {DataStorage.C_NAME, 
 		DataStorage.C_DESC, DataStorage.C_LAST_MODIFIED};
 	private static final int []TO = {R.id.taskName, 
@@ -26,8 +25,7 @@ public class TasksActivity extends BaseActivity {
          * we launch preferences activity - 
          * which after user fills server adress - starts the sync service
          */
-        setContentView(R.layout.tasklist);
-        global_app = (SupervisorApplication) getApplication();
+        setContentView(R.layout.layout_tasklist);
         taskList = (ListView) findViewById(R.id.tasklist);
         dataStorage = global_app.getDataStorage();
     }

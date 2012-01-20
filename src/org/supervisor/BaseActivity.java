@@ -17,13 +17,15 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.Toast;
 
 public class BaseActivity extends Activity {
 	
 
 	private static final String TAG = BaseActivity.class.getSimpleName();
-	private SupervisorApplication global_app;
+	protected SupervisorApplication global_app;
+	protected Button searchButton;
 	private String text;
 	private String status_text;
 	private String title;
@@ -34,14 +36,7 @@ public class BaseActivity extends Activity {
 		global_app = (SupervisorApplication) getApplication();
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 	}
-
-	
-
-	
-
-
-	
-	
+		
 
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
@@ -53,9 +48,8 @@ public class BaseActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
 			case R.id.synchronise:
-				if ( global_app.isNetworkOn() ) {
-					new ForcedSync().execute();
-				}
+				if ( global_app.isNetworkOn() )
+					runForcedSync();
 				else
 					Toast.makeText(this, R.string.dialog_text_no_network, Toast.LENGTH_SHORT).show();		
 				break;
@@ -71,6 +65,11 @@ public class BaseActivity extends Activity {
 		return true;
 	}
 	
+	
+	
+	public void runForcedSync() {
+			new ForcedSync().execute();
+	}
 
 
 	private class ForcedSync extends AsyncTask<String[], Void, Boolean> { 

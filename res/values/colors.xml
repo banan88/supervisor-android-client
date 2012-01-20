@@ -4,4 +4,7 @@
         <color name="gray">#808080</color>
         <color name="navy">#4f6975</color>
         <color name="light_gray">#d4dbe4</color>
+        <color name="light_gray_divider">#cccecc</color>
+        <color name="dark_gray_divider">#a5a4a4</color>
+        <color name="black">#000000</color>
     </resources>

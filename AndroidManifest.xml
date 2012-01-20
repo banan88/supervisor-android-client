@@ -19,6 +19,9 @@
         <activity android:name=".TimeActivity"></activity>
         <activity android:name=".TasksActivity"></activity>
         <activity android:name=".SearchActivity"></activity>
+        <activity android:name=".SingleTaskActivity"></activity>
+        <activity android:name=".TimeActivity"></activity>
+        <activity android:name=".TasksArchiveActivity"></activity>
         <service android:name=".SynchronisationService"></service>
         <receiver android:name=".NetworkReceiver">
         	<intent-filter >
