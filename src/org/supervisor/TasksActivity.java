@@ -1,11 +1,9 @@
 package org.supervisor;
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.Toast;
 
 public class TasksActivity extends BaseActivity {
 	
@@ -28,15 +26,10 @@ public class TasksActivity extends BaseActivity {
          * we launch preferences activity - 
          * which after user fills server adress - starts the sync service
          */
-        global_app = (SupervisorApplication) getApplication();
-		if(global_app.getServerURL() == null || global_app.getUsername() == null || global_app.getPassword() == null) {
-			Intent intent = new Intent(this, PreferencesActivity.class);
-			startActivity(intent);
-			Toast.makeText(this, R.string.no_config, Toast.LENGTH_LONG).show();
-		}
-		
         setContentView(R.layout.tasklist);
+        global_app = (SupervisorApplication) getApplication();
         taskList = (ListView) findViewById(R.id.tasklist);
+        dataStorage = global_app.getDataStorage();
     }
     
     
@@ -48,22 +41,12 @@ public class TasksActivity extends BaseActivity {
     	taskList.setAdapter(adapter);
 
     }
-    
-    public void onDestroy() {
-    	super.onDestroy();
-    }
+   
     
     public void onResume() {
     	super.onResume();
     	setUp();
-    }
-
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-	}
-    
-    
+    }    
    
+    
 }

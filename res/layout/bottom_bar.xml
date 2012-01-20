@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="wrap_content">
+  <LinearLayout 
+        	android:layout_width="fill_parent" 
+        	android:layout_height="wrap_content" 
+        	android:orientation="horizontal"
+        	android:background="@color/gray"
+        	android:gravity="center_horizontal">
+        	 <Button android:layout_width="wrap_content"
+        	 	android:width="0dp"
+        	 	android:layout_weight="5"
+        	 	android:text="Ostatnia synchronizacja: "
+	            android:id="@+id/TextView1" 
+	            android:background="@color/light_gray" 
+	            android:layout_height="fill_parent"
+	            android:gravity="center"
+	        />
+	        
+	        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:gravity="right" android:layout_weight="1"
+	        android:background="@color/gray">
+	            <Button android:layout_width="wrap_content" 
+		            android:id="@+id/imageView1" 
+		            android:background="@drawable/ic_menu_refresh" 
+		            android:layout_height="wrap_content"
+		            android:layout_gravity="right"	
+		         />
+	        </LinearLayout>
+        </LinearLayout>
+       
+</LinearLayout>

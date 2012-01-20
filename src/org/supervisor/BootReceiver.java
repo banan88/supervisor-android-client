@@ -12,9 +12,11 @@ public class BootReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		
 		
-			Log.d("bootreceiver", "boot receiver started service");
+			Log.d("bootreceiver", "phone booted - boot signal");
 			SupervisorApplication global_app = (SupervisorApplication) context.getApplicationContext();
-			if(!global_app.getSyncPeriod().equals("5"))
+			if(!global_app.getSyncPeriod().equals("5")) {
 				context.startService(new Intent(context, SynchronisationService.class));
+				Log.d("bootreceiver", "started service");
+			}
 	}
 }

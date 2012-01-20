@@ -9,16 +9,16 @@ android:layout_width="fill_parent">
 <!-- -->
 <TextView android:layout_height="wrap_content"
 android:layout_width="fill_parent" android:layout_weight="1"
-android:id="@+id/taskName" android:text="TASKNAME"
+android:id="@+id/taskName" android:text="TASKNAME" android:textColor="#010101"
 android:textStyle="bold" />
 <!-- -->
 <TextView android:layout_height="wrap_content"
 android:layout_width="fill_parent" android:layout_weight="1"
 android:gravity="right" android:id="@+id/taskDate"
-android:text="TASKDATE" />
+android:text="TASKDATE" android:textColor="#010101"/>
 </LinearLayout>
 <!-- -->
 <TextView android:layout_height="wrap_content"
 android:layout_width="fill_parent" android:id="@+id/taskDesc"
-android:text="TASKDESC" />
+android:text="TASKDESC" android:textColor="#010101"/>
 </LinearLayout>

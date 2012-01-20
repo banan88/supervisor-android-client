@@ -16,10 +16,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.Window;
 import android.widget.Toast;
 
 public class BaseActivity extends Activity {
 	
+
 	private static final String TAG = BaseActivity.class.getSimpleName();
 	private SupervisorApplication global_app;
 	private String text;
@@ -30,16 +32,24 @@ public class BaseActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		global_app = (SupervisorApplication) getApplication();
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
 	}
 
-	@Override
+	
+
+	
+
+
+	
+	
+
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.menu, menu);
 		return true;
 	}
 
-	@Override
+
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch(item.getItemId()) {
 			case R.id.synchronise:
