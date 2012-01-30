@@ -2,10 +2,7 @@ package org.supervisor;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 import android.accounts.NetworkErrorException;
 import android.app.Service;
@@ -110,14 +107,10 @@ public class SynchronisationService extends Service {
 							
 						try {
 							try {
-								if(global_app.getDataStorage().isEmpty()) {
-									DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.m");
-									String week_ago = dateFormat.format(new Date(new Date().getTime() - 10*24*60*60*1000));
-									tasks = ApiManager.getTasksSince(week_ago); 
-								}
-								else {
-									tasks = ApiManager.getTasksSince(ApiManager.getLastSyncTime());
-								}
+								if(global_app.getDataStorage().isEmpty()) 
+									tasks = ApiManager.getNTasks(100);
+								else 
+									tasks = ApiManager.getTasksSinceLastSync();
 							} catch (IllegalArgumentException e) {
 								throw new NetworkErrorException(e.getMessage());
 							}
@@ -131,9 +124,11 @@ public class SynchronisationService extends Service {
 								text = getString(R.string.sync_notification_body_ser_err);
 							isRequestOk = false;
 						}
-						Log.d(TAG, Boolean.toString(isRequestOk));
+						
+						int count = global_app.insertTaskUpdates(tasks);
+						if (count != 0) 
+							SynchronisationService.this.sendBroadcast(new Intent(SupervisorApplication.UPDATE_VIEW_INTENT));
 						global_app.generateNotification(new String[]{status_text, title, text}, icon, 2000, !isRequestOk, intent);
-						global_app.insertTaskUpdates(tasks);
 							
 					}
 					try {

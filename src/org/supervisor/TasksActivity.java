@@ -1,50 +1,168 @@
 package org.supervisor;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
+
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
-public class TasksActivity extends BaseActivity {
+public class TasksActivity extends BaseActivity{
 	
+	
+	private Button logo;
+	private Button searchButton;
 	private DataStorage dataStorage;
 	private SimpleCursorAdapter adapter;
 	private Cursor cursor;
 	private ListView taskList;
-	private static final String []FROM = {DataStorage.C_NAME, 
-		DataStorage.C_DESC, DataStorage.C_LAST_MODIFIED};
-	private static final int []TO = {R.id.taskName, 
-		R.id.taskDesc, R.id.taskDate};
-	
+	private TextView name;
+	private final String TAG = TasksActivity.class.getSimpleName(); 
+	private TaskUpdateReceiver receiver;
+	private IntentFilter filter;
+	private static final String []FROM = {DataStorage.C_NAME, DataStorage.C_LAST_MODIFIED};
+	private static final int []TO = {R.id.firstline, R.id.secondline};
+	private boolean archiveView;
+
+   	static class ViewHolder {
+        public ImageView imageView;
+        public TextView textView1;
+        public TextView textView2;
+    }
 	
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState); 
-        /*
-         * this is a main activity, after user launches it for first time 
-         * (we assume that first time is when properties are empty)
-         * we launch preferences activity - 
-         * which after user fills server adress - starts the sync service
-         */
         setContentView(R.layout.layout_tasklist);
+    	dataStorage = global_app.getDataStorage();
         taskList = (ListView) findViewById(R.id.tasklist);
-        dataStorage = global_app.getDataStorage();
+		name = (TextView) findViewById(R.id.category);
+		receiver = new TaskUpdateReceiver();
+		filter = new IntentFilter(SupervisorApplication.UPDATE_VIEW_INTENT);
+		try {
+			archiveView = getIntent().getBooleanExtra("archiveView", false);
+		} catch (NullPointerException e) {
+			archiveView = false;
+		}
+		searchButton = (Button) findViewById(R.id.search);
+		searchButton.setOnClickListener(this);
+		logo = (Button) findViewById(R.id.logo);
+		logo.setOnClickListener(this);
+		
+		taskList.setOnItemClickListener(new OnItemClickListener() {
+			
+			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+				Cursor cursor = (Cursor) parent.getAdapter().getItem(position);
+				Long id_ = cursor.getLong(cursor.getColumnIndex(DataStorage.C_ID));
+				Intent intent = new Intent(TasksActivity.this, SingleTaskActivity.class);
+				intent.putExtra("getTaskById", id_);
+				startActivity(intent);
+			}
+		});
     }
     
     
-    private void setUp() {
-    	dataStorage = global_app.getDataStorage();
-       	cursor = dataStorage.getAllTasks();
+    public void setUp() {
+    	if(archiveView) {
+    		name.setText(getString(R.string.subtitle_task_archive));
+    		cursor = dataStorage.getDoneAndCancelledTasks();
+    	}
+    	else {
+    		name.setText(getString(R.string.subtitle_tasks_list));
+    		cursor = dataStorage.getActiveTasks();
+    	}
        	startManagingCursor(cursor);
-       	adapter = new SimpleCursorAdapter(this, R.layout.tasklist_item, cursor, FROM, TO); //
+       	adapter = new TasksAdapter(); 
     	taskList.setAdapter(adapter);
-
+    	Log.d(TAG, Boolean.toString(archiveView));
     }
    
     
-    public void onResume() {
+    protected void onResume() {
     	super.onResume();
+    	registerReceiver(receiver, filter);
     	setUp();
     }    
-   
+    
+    
+    protected void onPause() {
+    	super.onPause();
+    	unregisterReceiver(receiver);
+    }
+    
+    
+    public void onClick(View v) {
+    	super.onClick(v);
+		
+	}
+    
+    
+    class TasksAdapter extends SimpleCursorAdapter {
+    	
+    	public TasksAdapter() {
+			super(TasksActivity.this, R.layout.tasklist_item, cursor, FROM, TO);
+		}
+    	
+    	public View getView(int position, View convertView, ViewGroup parent) {
+    		cursor.moveToNext();
+            View rowView = convertView;
+            ViewHolder holder;
+            if (rowView == null) {
+                LayoutInflater inflater =  (LayoutInflater) TasksActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                rowView = inflater.inflate(R.layout.tasklist_item,null,true);
+                holder = new ViewHolder();
+                holder.textView1 = (TextView) rowView.findViewById(R.id.firstline);
+                holder.textView2 = (TextView) rowView.findViewById(R.id.secondline);
+                holder.imageView = (ImageView) rowView.findViewById(R.id.listitem_icon);
+                rowView.setTag(holder);
+            }else{
+                holder = (ViewHolder) rowView.getTag();
+            }
+            
+            int state = cursor.getInt(cursor.getColumnIndex(DataStorage.C_STATE));
+            switch(state) {
+            	case 3:
+            		holder.imageView.setImageResource(R.drawable.done);
+            		break;
+            	case 2:
+            		holder.imageView.setImageResource(R.drawable.current);
+            		break;
+            	case 1:
+            		holder.imageView.setImageResource(R.drawable.clock);
+            		break;
+            	case 0:
+            		holder.imageView.setImageResource(R.drawable.cancel);
+            		break;
+            }
+            
+            String s = cursor.getString(cursor.getColumnIndex(DataStorage.C_NAME));
+            holder.textView1.setText(s);
+            s = cursor.getString(cursor.getColumnIndex(DataStorage.C_LAST_MODIFIED));
+            holder.textView2.setText(s);
+
+            return rowView;
+        } 
+    }
+    
+    
+    class TaskUpdateReceiver extends BroadcastReceiver{
+
+		public void onReceive(Context context, Intent intent) {
+			TasksActivity.this.setUp();
+		}
+
+
+	}
     
 }

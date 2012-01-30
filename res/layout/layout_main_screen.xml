@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/body"
+    android:layout_width="fill_parent" android:layout_height="fill_parent"
+    android:orientation="vertical">
+    
+    <include layout="@layout/top_bar"/>    
+		
+		 <View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+
+	        
+	            <LinearLayout android:orientation="horizontal"
+	           	android:layout_width="fill_parent"
+	           	android:layout_height="0dp"
+	           	android:background="@color/white"
+	           	android:gravity="center"
+	           	android:layout_weight="2"
+	            >
+	            	<View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="5" ></View>
+	            	<LinearLayout
+						android:orientation="vertical" 
+		            	android:layout_width="0dp"
+		            	android:layout_weight="50" 
+		            	android:layout_height="wrap_content" android:background="@color/white">
+				            <Button
+				            	android:id="@+id/active"
+				            	android:layout_width="wrap_content"
+				            	android:layout_height="wrap_content"
+				            	android:background="@drawable/task"
+				            	android:layout_gravity="center"
+					         />
+					         <TextView android:layout_width="wrap_content"
+					         	android:layout_gravity="center"
+				            	android:layout_height="wrap_content" 
+				            	android:text="@string/subtitle_active_task"
+				            	android:textStyle="bold"
+				            	android:textColor="@color/black"/>
+			         </LinearLayout>
+			         <LinearLayout
+						android:orientation="vertical" 
+		            	android:layout_width="0dp"
+		            	android:layout_weight="50" 
+		            	android:layout_height="wrap_content" android:background="@color/white">
+				            <Button
+				            	android:id="@+id/tasklist"
+				            	android:layout_width="wrap_content"
+				            	android:layout_height="wrap_content"
+				            	android:background="@drawable/tasks"
+				            	android:layout_gravity="center"
+					         />
+					         <TextView android:layout_width="wrap_content"
+					         	android:layout_gravity="center"
+				            	android:layout_height="wrap_content" 
+				            	android:text="@string/subtitle_tasks_list"
+				            	android:textStyle="bold"
+				            	android:textColor="@color/black"/>
+			         </LinearLayout>
+			         <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="5" ></View>
+	            </LinearLayout>	    
+	            <LinearLayout android:orientation="horizontal"
+	           	android:layout_width="fill_parent"
+	           	android:layout_height="0dp"
+	           	android:background="@color/white"
+	           	android:gravity="center"
+	           	android:layout_weight="2"
+	            >
+	            	<View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="5" ></View>
+		            <LinearLayout
+						android:orientation="vertical" 
+		            	android:layout_width="0dp"
+		            	android:layout_weight="50" 
+		            	android:layout_height="wrap_content" android:background="@color/white">
+				            <Button
+				            	android:id="@+id/archive"
+				            	android:layout_width="wrap_content"
+				            	android:layout_height="wrap_content"
+				            	android:background="@drawable/archive"
+								android:layout_gravity="center"
+					         />
+					         <TextView android:layout_width="wrap_content"
+					         	android:layout_gravity="center"
+				            	android:layout_height="wrap_content" 
+				            	android:text="@string/subtitle_task_archive"
+				            	android:textStyle="bold"
+				            	android:textColor="@color/black"
+				            	/>
+			         </LinearLayout>
+			         <LinearLayout
+						android:orientation="vertical" 
+		            	android:layout_width="0dp"
+		            	android:layout_weight="50" 
+		            	android:layout_height="wrap_content" android:background="@color/white">
+				            <Button
+				            	android:id="@+id/time"
+				            	android:layout_width="wrap_content"
+				            	android:layout_height="wrap_content"
+				            	android:background="@drawable/clock_big"
+								android:layout_gravity="center"
+								android:textStyle="bold"
+				            	android:textColor="@color/black"
+					         />
+					         <TextView android:layout_width="wrap_content"
+					         	android:layout_gravity="center"
+				            	android:layout_height="wrap_content" 
+				            	android:text="@string/subtitle_time"
+				            	android:textStyle="bold"
+				            	android:textColor="@color/black"/>
+			         </LinearLayout>
+			         <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="5" ></View>	  
+	            </LinearLayout>    
+                      
+
+
+		 <View android:layout_height="2px"
+			   		android:layout_width="fill_parent"
+			    	android:background="#90909090"/>
+		    
+
+  	<include layout="@layout/bottom_bar"/>
+    </LinearLayout>

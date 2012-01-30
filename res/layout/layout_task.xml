@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_height="fill_parent"
+	android:layout_width="fill_parent">
+		<include layout="@layout/top_bar"/>    
+			
+			<View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+				 
+			<TextView android:layout_width="fill_parent"
+				android:id="@+id/category" 
+			    android:background="@drawable/gradient_title"
+				android:layout_height="wrap_content"
+			    android:gravity="center"
+			    android:textStyle="bold"
+			    android:textColor="@color/black"
+			    android:minHeight="40dp"
+			/>
+			<View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+				 
+	<ScrollView 
+	    android:id="@+id/scroller"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:fillViewport="true" >
+    
+	
+	
+		<LinearLayout 
+			android:orientation="vertical"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent"
+			android:background="@color/white"
+		>
+				         
+			<TextView android:layout_width="fill_parent"
+			            android:id="@+id/task_sync_time" 
+			            android:layout_height="20dp"
+			        />		
+			<View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+			
+			<LinearLayout 
+				android:orientation="horizontal"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:gravity="center_vertical">
+				<Button android:layout_width="wrap_content"
+		            android:id="@+id/map_icon" 
+		            android:background="@drawable/map" 
+		            android:layout_height="wrap_content"
+		            android:gravity="center_horizontal"
+		        />
+				<TextView android:layout_width="wrap_content"
+				            android:id="@+id/task_localisation" 
+				            android:layout_height="wrap_content"
+				        />
+	   		</LinearLayout>            	
+			<View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+			<TextView android:layout_width="fill_parent"
+			            android:id="@+id/task_desc" 
+			            android:layout_height="wrap_content"
+			        />
+			<View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+			<TextView android:layout_width="fill_parent"
+			            android:id="@+id/task_added" 
+			            android:layout_height="wrap_content"
+			        />						       	
+		</LinearLayout>
+	
+	</ScrollView>
+</LinearLayout>

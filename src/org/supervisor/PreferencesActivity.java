@@ -17,9 +17,11 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 	public static final String username_pref_key = "username";
 	public static final String password_pref_key = "password";
 	public static final String TAG = PreferencesActivity.class.getSimpleName();
+	private SupervisorApplication global_app;
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		global_app = (SupervisorApplication) getApplication();
 		addPreferencesFromResource(R.xml.preferences);
 		lpref = (ListPreference)findPreference(sync_pref_key);
 		lpref.setSummary(lpref.getEntry());
@@ -76,7 +78,9 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 			if(!pref.getText().trim().equals(""))
 				pref.setSummary(null);
 		}
-		if (!lpref.getValue().equals("5") && ((SupervisorApplication) getApplication()).isNetworkOn() == true)
+		if (!lpref.getValue().equals("5") && 
+				(global_app.isNetworkOn() == true) && //to do: launch service only if all data are set.
+				(global_app.getUsername()!=null) && (global_app.getServerURL()!=null) && (global_app.getPassword()!=null))
 			startService(new Intent(this, SynchronisationService.class));
 	}
 

@@ -21,6 +21,7 @@ public class SupervisorApplication extends Application {
 	private SharedPreferences prefs;
 	private DataStorage dataStorage;
 	private NotificationManager mgr;
+	public static final String UPDATE_VIEW_INTENT = "org.supervisor.UPDATE_VIEW";
 	
 	public void onCreate() {
 		super.onCreate();	

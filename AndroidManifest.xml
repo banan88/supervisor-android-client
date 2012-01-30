@@ -7,7 +7,7 @@
     
     <uses-permission android:name="android.permission.INTERNET"	></uses-permission>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
-    <application android:name="SupervisorApplication" android:icon="@drawable/icon" android:label="@string/app_name">
+    <application android:name="SupervisorApplication" android:icon="@drawable/keylauncher" android:label="@string/app_name">
         <activity android:name=".MainScreenActivity"
                   android:label="@string/app_name">
             <intent-filter>

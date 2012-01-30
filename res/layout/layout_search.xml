@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/body"
+    android:layout_width="fill_parent" android:layout_height="fill_parent"
+    android:orientation="vertical">
+	<include layout="@layout/top_bar_search"/>    
+	  <View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+	<ListView android:layout_height="fill_parent"
+		android:layout_width="fill_parent" android:id="@+id/tasklist"
+		android:background="#ffffff"
+		android:cacheColorHint="#ffffff"
+		android:divider="@color/light_gray_divider"
+		android:dividerHeight="1dp"/>
+		
+		
+</LinearLayout>

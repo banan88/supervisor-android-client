@@ -2,29 +2,33 @@
 <LinearLayout
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="fill_parent"
-  android:layout_height="wrap_content">
+  android:layout_height="wrap_content" android:minHeight="20dp">
   
   <LinearLayout
-  			xmlns:android="http://schemas.android.com/apk/res/android" 
         	android:layout_width="fill_parent" 
         	android:layout_height="wrap_content" 
         	android:orientation="horizontal"
-        	android:background="@color/light_gray">
+        	android:background="@drawable/gradient_top"
+        	android:minHeight="40dp"
+        	android:gravity="center">
         	 <Button android:layout_width="wrap_content"
 	            android:id="@+id/logo" 
-	            android:background="@drawable/ic_menu_refresh" 
-	            android:layout_height="fill_parent"
+	            android:background="@drawable/supervisor_logo2" 
+	            android:layout_height="wrap_content"
 	            android:gravity="center_horizontal"
+	            android:layout_marginLeft="2dp"
 	        />
-	        <LinearLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:gravity="right"
-	        android:background="@color/navy">
+	        <LinearLayout android:layout_width="fill_parent" android:layout_height="fill_parent"
+	        android:background="@drawable/gradient_top" android:gravity="right">
+	        	<View android:layout_height="fill_parent"
+			   		android:layout_width="2px"
+			    	android:background="#90909090"/>
 	            <Button android:layout_width="wrap_content" 
 		            android:id="@+id/search" 
-		            android:background="@android:drawable/ic_menu_zoom"
+		            android:background="@drawable/ic_search_category_default"
 		            android:layout_height="wrap_content"
-		            android:layout_gravity="right"
+		            android:layout_gravity="right|center_vertical"
 		         />
 	        </LinearLayout>
         </LinearLayout>
-  
 </LinearLayout>

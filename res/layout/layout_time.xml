@@ -1,0 +1,75 @@
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_height="fill_parent"
+	android:layout_width="fill_parent"
+	android:background="@color/white">
+		<include layout="@layout/top_bar"/>    
+			
+			<View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+				 
+			<TextView android:layout_width="fill_parent"
+				android:id="@+id/category" 
+			    android:background="@drawable/gradient_title"
+				android:layout_height="wrap_content"
+			    android:gravity="center"
+			    android:textStyle="bold"
+			    android:textColor="@color/black"
+			    android:minHeight="40dp"
+			/>
+			
+			<View
+					 android:layout_width="fill_parent"
+					 android:layout_height="1dp"
+					 android:background="@color/dark_gray_divider" />
+					 
+			<LinearLayout 
+				android:layout_width="fill_parent" 
+				android:layout_height="fill_parent" 
+				android:gravity="center|top"
+				android:orientation="vertical">
+				
+				<View android:layout_width="0dp" android:layout_height="30dp"></View>
+				
+				<Button 
+					android:text="Rozpocznij pracę" 
+					android:id="@+id/button1"
+					android:layout_width="250dp" 
+					android:layout_height="wrap_content"
+					></Button>				
+				
+				<View android:layout_width="0dp" android:layout_height="30dp"></View>
+				
+				<TextView 
+					android:id="@+id/textView1" 
+					android:layout_height="wrap_content" 
+					android:text="Czas rozpoczęcia:"
+					android:textColor="@color/gray" 
+					android:layout_width="wrap_content"></TextView>
+				
+				<View android:layout_width="0dp" android:layout_height="30dp"></View>
+				<TextView 
+					android:id="@+id/textViewStartTime" 
+					android:layout_height="wrap_content" 
+					android:textColor="@color/black" 
+					android:layout_width="wrap_content"></TextView>
+				<View android:layout_width="0dp" android:layout_height="30dp"></View>
+				
+				<TextView 
+					android:id="@+id/textView1" 
+					android:layout_height="wrap_content" 
+					android:textColor="@color/gray" 
+					android:text="Czas zakończenia:" 
+					android:layout_width="wrap_content"></TextView>
+				<TextView 
+					android:id="@+id/textViewFinishTime" 
+					android:layout_height="wrap_content" 
+					android:textColor="@color/black" 
+					android:layout_width="wrap_content"></TextView>
+				<View android:layout_width="0dp" android:layout_height="30dp"></View>
+				 
+				
+    		</LinearLayout>
+</LinearLayout>

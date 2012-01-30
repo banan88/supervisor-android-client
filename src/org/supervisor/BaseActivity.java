@@ -3,10 +3,6 @@ package org.supervisor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
 import android.accounts.NetworkErrorException;
 import android.app.Activity;
 import android.content.Intent;
@@ -16,20 +12,21 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
-import android.widget.Button;
 import android.widget.Toast;
 
-public class BaseActivity extends Activity {
+public class BaseActivity extends Activity implements OnClickListener{
 	
 
 	private static final String TAG = BaseActivity.class.getSimpleName();
 	protected SupervisorApplication global_app;
-	protected Button searchButton;
 	private String text;
 	private String status_text;
 	private String title;
 	private boolean isRequestOk;
+	
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -46,25 +43,38 @@ public class BaseActivity extends Activity {
 
 
 	public boolean onOptionsItemSelected(MenuItem item) {
+		Log.d(TAG, "menu item selected" + item.toString());
 		switch(item.getItemId()) {
 			case R.id.synchronise:
+				Log.d(TAG, "synchronizacja");
 				if ( global_app.isNetworkOn() )
 					runForcedSync();
 				else
 					Toast.makeText(this, R.string.dialog_text_no_network, Toast.LENGTH_SHORT).show();		
 				break;
 				
-			case R.id.tasklist:
-				startActivity(new Intent(this, TasksActivity.class));
-				break;
-			
 			case R.id.preferences:
+				Log.d(TAG, "ustawienia");
 				startActivity(new Intent(this, PreferencesActivity.class));
 				break;
 		}
 		return true;
 	}
 	
+	
+	public void onClick(View v) {
+		switch (v.getId()){
+			case R.id.search:
+				startActivity(new Intent(this, SearchActivity.class));
+				break;
+			case R.id.logo:
+				startActivity(new Intent(this, MainScreenActivity.class));
+				break;
+			case R.id.logo_short:
+				startActivity(new Intent(this, MainScreenActivity.class));
+				break;
+		}
+	}
 	
 	
 	public void runForcedSync() {
@@ -74,15 +84,12 @@ public class BaseActivity extends Activity {
 
 	private class ForcedSync extends AsyncTask<String[], Void, Boolean> { 
 		
-		@Override
 		protected Boolean doInBackground(String[]... params) {
-			Log.d(TAG, "asynctask running in background");
 			if( global_app.isNetworkOn() ) {
 				text = getString(R.string.sync_notification_body);
 				status_text = getString(R.string.sync_status_bar_txt);
 				title = getString(R.string.sync_notification_title);
 				isRequestOk = true;
-				Log.d(TAG, "Network on!");
 				ApiManager.setCredentials(global_app.getUsername(), global_app.getPassword());
 				String adress = global_app.getServerURL();
 				try {
@@ -99,19 +106,15 @@ public class BaseActivity extends Activity {
 				
 				try {
 					try {
-						if(global_app.getDataStorage().isEmpty()) {
-							DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.m");
-							String week_ago = dateFormat.format(new Date(new Date().getTime() - 10*24*60*60*1000));
-							tasks = ApiManager.getTasksSince(week_ago); 
-						}
-						else {
-							tasks = ApiManager.getTasksSince(ApiManager.getLastSyncTime());
-						}
+						if(global_app.getDataStorage().isEmpty()) 
+							tasks = ApiManager.getNTasks(100);
+						else 
+							tasks = ApiManager.getTasksSinceLastSync();
 					} catch (IllegalArgumentException e) {
 						throw new NetworkErrorException(e.getMessage());
 					}
 						
-				} catch (NetworkErrorException e) {					
+				} catch (NetworkErrorException e) {	
 					intent = new Intent(BaseActivity.this, PreferencesActivity.class);
 					status_text = getString(R.string.sync_status_bar_txt_error);
 					if (e.getMessage().equals("401")) 
@@ -121,22 +124,22 @@ public class BaseActivity extends Activity {
 					isRequestOk = false;
 				}
 				
+				int count = global_app.insertTaskUpdates(tasks);
+				if (count != 0) 
+					BaseActivity.this.sendBroadcast(new Intent(SupervisorApplication.UPDATE_VIEW_INTENT));
 				global_app.generateNotification(new String[]{status_text, title, text}, icon, 2000, !isRequestOk, intent);
-				global_app.insertTaskUpdates(tasks);
-					
+				
 			}
 			return null;
 		}
-		@Override
+		
 		protected void onProgressUpdate(Void... values) {
 			super.onProgressUpdate(values);
 		}
-		@Override
+		
 		protected void onPostExecute(Boolean result) {
 			super.onPostExecute(result);
 		}
-		
-		
-		
 	}
+	
 }

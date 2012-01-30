@@ -13,6 +13,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnPerRouteBean;
 import org.apache.http.conn.scheme.PlainSocketFactory;
@@ -22,6 +23,7 @@ import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,7 +34,7 @@ import android.util.Log;
 public class ApiManager {
 
 	private static final String TAG = ApiManager.class.getSimpleName();
-	private static final int CONN_TIMEOUT = 3000;
+	private static final int CONN_TIMEOUT = 1000;
 	private static final int MAX_TOTAL_CONN = 10;
 	private static final int MAX_CONN_PER_ROUTE = 10;
 	private static UsernamePasswordCredentials credentials;
@@ -73,7 +75,9 @@ public class ApiManager {
 		sr.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
 		
 		BasicHttpParams params = new BasicHttpParams();
-		ConnManagerParams.setTimeout(params, CONN_TIMEOUT);
+		HttpConnectionParams.setConnectionTimeout(params, CONN_TIMEOUT);
+		HttpConnectionParams.setSoTimeout(params, CONN_TIMEOUT);
+		ConnManagerParams.setTimeout(params, 100);
 		ConnManagerParams.setMaxTotalConnections(params, MAX_TOTAL_CONN);
 		ConnManagerParams.setMaxConnectionsPerRoute(params, new ConnPerRouteBean(MAX_CONN_PER_ROUTE));
 		
@@ -90,7 +94,12 @@ public class ApiManager {
 		String result = null;
 		try {
 			Log.d(TAG, HOST);
-			HttpResponse response = httpClient.execute(method);
+			HttpResponse response = null;
+			try {
+				response = httpClient.execute(method);
+			} catch (ConnectTimeoutException e) {
+				Log.d(TAG, "conntimeoutexception");
+			}
 			int httpStatus = response.getStatusLine().getStatusCode();
 			if (httpStatus != 200) {
 				Log.d(TAG, Integer.toString(httpStatus)+"lololo");
@@ -106,7 +115,7 @@ public class ApiManager {
 				Log.d(TAG, "no stream in response found"); 
 			}
 		} catch (IOException e) {
-			Log.d(TAG, e.getMessage());
+			Log.d(TAG, e.getMessage() + "IO");
 			throw new NetworkErrorException("404");
 		}
 		return result;
@@ -139,7 +148,8 @@ public class ApiManager {
 						single.getString("finished"),
 						single.getString("started"),
 						Integer.parseInt(single.getString("ver")),
-						single.getString("last_sync")
+						single.getString("last_sync"),
+						single.getString("supervisor")
 					));
 				}
 			} catch (JSONException e) {
@@ -176,20 +186,26 @@ public class ApiManager {
 	}
 	
 	
-	public static ArrayList<Task> getTasksSince(String date) throws NetworkErrorException {
-		// YYYY-MM-DD hh:mm:ss.m -format
-		date = date.replace('"', ' ').trim();
-		date = date.replace('-', 'X');
-		date = date.replace(' ', 'X');
-		date = date.replace(':', 'X');
-		date = date.replace('.', 'X');
+	public static ArrayList<Task> getNTasks(int count) throws NetworkErrorException {
+		HttpGet get = new HttpGet(HOST + "get_n_tasks/" + Integer.toString(count) + "/");
 		try {
-			HttpGet get = new HttpGet(HOST + "get_tasks_since/" + date + "/");
+			get.addHeader(new BasicScheme().authenticate(credentials, get));
+		} catch (AuthenticationException e) {
+			Log.d(TAG, e.getMessage());
+		}
+		return buildTaskList(apiCall(get));
+	}
+	
+	
+	public static ArrayList<Task> getTasksSinceLastSync() throws NetworkErrorException {
+		try {
+			HttpGet get = new HttpGet(HOST + "get_tasks_since_last_sync/");
 			try {
 				get.addHeader(new BasicScheme().authenticate(credentials, get));
 			} catch (AuthenticationException e) {
 				Log.d(TAG, e.getMessage());
 			}
+			
 		return buildTaskList(apiCall(get));
 		} catch (NullPointerException e) {
 			throw new NetworkErrorException("404");

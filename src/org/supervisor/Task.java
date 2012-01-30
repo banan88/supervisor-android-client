@@ -14,9 +14,10 @@ public class Task {
 	private String startTime;
 	private int version;
 	private String lastSynced;
+	private String supervisor;
 	
 	public Task(long a0, String a1, String a2, double a3, double a4, int a5,
-			String a6, String a7, String a8, String a9, int a10, String a11){
+			String a6, String a7, String a8, String a9, int a10, String a11, String a12){
 		id = a0;
 		name = a1;
 		description = a2;
@@ -29,6 +30,7 @@ public class Task {
 		startTime = a9;
 		version = a10;
 		lastSynced = a11;
+		supervisor = a12;
 	}
 
 	public long getId() {
@@ -81,6 +83,10 @@ public class Task {
 
 	public String getLastSynced() {
 		return lastSynced;
+	}
+	
+	public String getSupervisor() {
+		return supervisor;
 	}
 	
 	

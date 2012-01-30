@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:orientation="vertical" android:layout_height="fill_parent"
+android:layout_width="fill_parent">
+	<include layout="@layout/top_bar"/>    
+		<View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+				 
+			<TextView android:layout_width="fill_parent"
+				android:id="@+id/category" 
+			    android:background="@drawable/gradient_title"
+				android:layout_height="wrap_content"
+			    android:gravity="center"
+			    android:textStyle="bold"
+			    android:textColor="@color/black"
+			    android:minHeight="40dp"
+			/>
+			<View
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" />
+
+
+<ListView android:layout_height="fill_parent"
+android:layout_width="fill_parent" android:id="@+id/tasklist"
+android:background="#ffffff"
+android:cacheColorHint="#ffffff"
+android:divider="@color/light_gray_divider"
+android:dividerHeight="1dp"/>
+
+		
+		
+</LinearLayout>
