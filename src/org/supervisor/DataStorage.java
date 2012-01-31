@@ -30,7 +30,11 @@ public class DataStorage {
 	static final String C_VERSION = "version";
 	static final String C_LAST_SYNC = "last_synced";
 	static final String C_SUPERVISOR = "supervisor";
-	static final String PENDING_SYNC_TABLE = "pending_sync";
+	static final String C_PENDING_SYNC = "state_changed"; //flaga okreslajaca czy wyslac stan/czas pracy na serwer w trakcie synchronizacji 0/1
+	static final String WORK_TIME_TABLE = "work_time";
+	static final String C_WORK_START = "work_start";
+	static final String C_WORK_FINISH = "work_finish";
+	static final String C_WORK_DATE = "work_date";
 	
 	final DBHelper dbHelper;
 	
@@ -49,22 +53,21 @@ public class DataStorage {
 				C_NAME + " text, " + C_DESC + " text, " + C_LAT + " real, " + C_LON + " real, " +
 				C_STATE + " integer, " + C_CREATION_TIME + " text, " + C_LAST_MODIFIED + " text, " +
 				C_FINISH_TIME + " text, " + C_START_TIME + " text, " + C_VERSION + " integer, " + 
-				C_LAST_SYNC + " text, " + C_SUPERVISOR + " text);";
-				
+				C_LAST_SYNC + " text, " + C_PENDING_SYNC + " integer, " + C_SUPERVISOR + " text);";
 			db.execSQL(sql);
 			Log.d(TAG, "tasks table created");
 			
-			sql = "CREATE TABLE " + PENDING_SYNC_TABLE + " ( " + C_ID + " integer primary key);";
-			
+			sql = "CREATE TABLE " + WORK_TIME_TABLE + " ( " + C_WORK_DATE + " integer primary key, " + C_WORK_START + " integer, " + C_PENDING_SYNC + " integer, " +
+				C_WORK_FINISH + " text);";
 			db.execSQL(sql);
-			Log.d(TAG, "monitoring table created");
+			Log.d(TAG, "work time table created");
 		}
 
 		
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			String sql = "DROP TABLE IF EXISTS " + TASK_TABLE + ";";
 			db.execSQL(sql);
-			sql = "DROP TABLE " + PENDING_SYNC_TABLE + ";";
+			sql = "DROP TABLE " + WORK_TIME_TABLE+ ";";
 			db.execSQL(sql);
 			Log.d(TAG, "tables dropped");
 			
@@ -219,6 +222,97 @@ public class DataStorage {
 		}
 		c.close();
 		return null;
+	}
+	
+	
+	public void taskStarted(long id) {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '2', " + C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
+		db.execSQL(sql);
+	}
+	
+	
+	public void taskFinished(long id) {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '3', " + C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
+		db.execSQL(sql);
+	}
+	
+	public Cursor getPendingStatuses() {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		return db.query(TASK_TABLE, null, C_PENDING_SYNC + " = 1", null, null, null, null);
+	}
+	
+	public void resetPendingStatuses() {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		String sql = "UPDATE " + TASK_TABLE + " SET " + C_PENDING_SYNC + " = 0;";
+		db.execSQL(sql);
+	}
+	
+	public Cursor getPendingWorkTimes() {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		return db.query(WORK_TIME_TABLE, null, C_PENDING_SYNC + " = 1", null, null, null, null);
+	}
+	
+	public void resetPendingWorkTimes() {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		String sql = "UPDATE " + WORK_TIME_TABLE + " SET " + C_PENDING_SYNC + " = 0;";
+		db.execSQL(sql);
+	}
+	
+	public void startWork(Integer yyyymmdd, Long dateMillis) { //tworzy dzien i zaczyna prace
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		Log.d(TAG, Integer.toString(yyyymmdd));
+		String sql = "INSERT INTO " + WORK_TIME_TABLE + " ( " + C_WORK_DATE + ", " + C_PENDING_SYNC + ", "+ C_WORK_START + ") " +
+				"VALUES (" + yyyymmdd + ", 1, " + dateMillis + ");";
+		Log.d(TAG, sql);
+		try {
+			db.execSQL(sql);
+		} catch (SQLException e) {
+			Log.d(TAG, "day duplicate");
+		}
+		Log.d(TAG, "startWork ");
+	}
+	
+	public void finishWork(Integer yyyymmdd, Long dateMillis) { //konczy prace
+		Log.d(TAG, Integer.toString(yyyymmdd));
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		String sql = "UPDATE " + WORK_TIME_TABLE + " SET " + C_WORK_FINISH + " = " + dateMillis + 
+			", " + C_PENDING_SYNC + " = 1 WHERE " + C_WORK_DATE + " = " + yyyymmdd + ";";
+		db.execSQL(sql);
+		Log.d(TAG, "finishWork called");
+		Log.d(TAG, sql);
+	}
+	
+	public int dayState(int yyyymmdd) { //0 - brak dnia, 1 - przycisk start, 2 - przycisk zablokowany 3- przycisk zakoncz
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		String day = "SELECT * FROM " + WORK_TIME_TABLE + " WHERE " + C_WORK_DATE + " = " + yyyymmdd + ";";
+		Cursor c = db.rawQuery(day, null);
+		int state = 0;
+		Log.d(TAG, Integer.toString(yyyymmdd));
+		Log.d(TAG, "c count: " + Integer.toString(c.getCount()));
+		if (c.getCount()==0) { //dla tego dnia nie bylo jeszcze czasu pracy
+			c.close();
+			return state;
+		}
+		Long start, finish;
+		c.moveToFirst();
+		start = c.getLong(c.getColumnIndex(C_WORK_START));
+		finish = c.getLong(c.getColumnIndex(C_WORK_FINISH));
+		Log.d(TAG, "start: " + Long.toString(start) + " finish: " + Long.toString(finish));
+		c.close();
+		if(start == 0 && finish == 0)
+			state = 1;
+		if(start != 0 && finish != 0)
+			state = 2;
+		if(start != 0 && finish == 0)
+			state = 3;
+		return state;
+	}
+	
+	public Cursor getDay(int yyyymmdd) {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		return db.query(WORK_TIME_TABLE, null, C_WORK_DATE + " = " + yyyymmdd, null, null, null, null);
 	}
 	
 }
