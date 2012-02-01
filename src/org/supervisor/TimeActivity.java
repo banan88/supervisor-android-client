@@ -1,6 +1,6 @@
 package org.supervisor;
 
-
+import android.database.Cursor;
 import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
@@ -14,7 +14,6 @@ public class TimeActivity extends BaseActivity{
 	private TextView name;
 	private Button logo;
 	private Button searchButton;
-	private Time time;
 	private Button toggle;
 	private DataStorage dataStorage;
 	private TextView tv1;
@@ -25,10 +24,7 @@ public class TimeActivity extends BaseActivity{
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.layout_time);
-		time = new Time();
-		time.setToNow();
 		name = (TextView) findViewById(R.id.category);
-		name.setText("Czas pracy (" + time.format("%Y-%m-%d") + ")");
 		searchButton = (Button) findViewById(R.id.search);
 		searchButton.setOnClickListener(this);
 		logo = (Button) findViewById(R.id.logo);
@@ -44,6 +40,7 @@ public class TimeActivity extends BaseActivity{
 		super.onResume();
 		currentTime = new Time();
 		currentTime.setToNow();
+		name.setText("Czas pracy (" + currentTime.format("%Y-%m-%d") + ")");
 		toggleButtonOnDayState();
 	}
 	
@@ -54,17 +51,38 @@ public class TimeActivity extends BaseActivity{
 			case 0:
 				toggle.setEnabled(true);
 				toggle.setText("Rozpocznij pracę");
+				tv1.setText("");
+				tv2.setText("");
 				break;
 			case 1:
 				toggle.setEnabled(true);
 				toggle.setText("Rozpocznij pracę");
+				tv1.setText("");
+				tv2.setText("");
 				break;
 			case 2:
 				toggle.setEnabled(false);
+				Cursor c = dataStorage.getDay(Integer.parseInt(currentTime.format("%Y%m%d")));
+				c.moveToFirst();
+				Long start = c.getLong(c.getColumnIndex(DataStorage.C_WORK_START));
+				Long finish = c.getLong(c.getColumnIndex(DataStorage.C_WORK_FINISH));
+				Time t = new Time();
+				t.set(start);				
+				tv1.setText("Rozpoczęcie pracy: " + t.format("%H:%M:%S"));
+				t.set(finish);
+				tv2.setText("Zakończenie pracy: " + t.format("%H:%M:%S"));
+				c.close();
 				break;
 			case 3:
 				toggle.setEnabled(true);
 				toggle.setText("Zakończ pracę");
+				Cursor c1 = dataStorage.getDay(Integer.parseInt(currentTime.format("%Y%m%d")));
+				c1.moveToFirst();
+				Long start1 = c1.getLong(c1.getColumnIndex(DataStorage.C_WORK_START));
+				Time t1 = new Time();
+				t1.set(start1);				
+				tv1.setText("Rozpoczęcie pracy: " + t1.format("%H:%M:%S"));
+				c1.close();
 				break;
 		}
 	}
@@ -73,6 +91,7 @@ public class TimeActivity extends BaseActivity{
 	public void onClick(View v) {
 		super.onClick(v);	
 		if(v.getId() == R.id.buttonToggle) {
+			currentTime.setToNow();
 			switch(state) {
 				case 3:
 					dataStorage.finishWork(Integer.parseInt(currentTime.format("%Y%m%d")), currentTime.toMillis(false));

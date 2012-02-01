@@ -238,9 +238,9 @@ public class DataStorage {
 		db.execSQL(sql);
 	}
 	
-	public Cursor getPendingStatuses() {
+	public Cursor getPendingTasks() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return db.query(TASK_TABLE, null, C_PENDING_SYNC + " = 1", null, null, null, null);
+		return db.query(TASK_TABLE, null, C_PENDING_SYNC + " = " + 1, null, null, null, null);
 	}
 	
 	public void resetPendingStatuses() {
@@ -313,6 +313,11 @@ public class DataStorage {
 	public Cursor getDay(int yyyymmdd) {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		return db.query(WORK_TIME_TABLE, null, C_WORK_DATE + " = " + yyyymmdd, null, null, null, null);
+	}
+	
+	public Cursor getPendingDays() {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		return db.query(WORK_TIME_TABLE, null, C_PENDING_SYNC + " = " + 1, null, null, null, null);
 	}
 	
 }

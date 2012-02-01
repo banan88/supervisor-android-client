@@ -44,6 +44,7 @@ public class ApiManager {
 	public static final int CURRENT_TASKS = 2;
 	public static final int PENDING_TASKS = 1;
 	
+	
 	public static void setCredentials(String username, String password) {
 		if (username != null && password != null) 
 			credentials = new UsernamePasswordCredentials(username, password);
@@ -51,24 +52,7 @@ public class ApiManager {
 			credentials = new UsernamePasswordCredentials("", "");
 	}
 
-	
-	public static boolean testConnParameters() throws NetworkErrorException{ //should be dependant on network state
-		HttpGet get = new HttpGet(HOST + "test/");
-		try {
-			get.addHeader(new BasicScheme().authenticate(credentials, get));
-		} catch (AuthenticationException e) {
-			Log.d(TAG, e.getMessage());
-		}
-		try {
-			if (apiCall(get).equals("True"))
-				return true;
-			else
-				return false;
-		} catch (NullPointerException e) {
-			return false;
-		}
-	}
-	
+
 	private static DefaultHttpClient clientFactory() {
 		
 		SchemeRegistry sr = new SchemeRegistry();
@@ -85,6 +69,7 @@ public class ApiManager {
 		DefaultHttpClient client = new DefaultHttpClient(mgr, params);
 		return client;
 	}
+	
 	
 	private static String apiCall(HttpRequestBase method) throws NetworkErrorException{
 		
@@ -158,33 +143,6 @@ public class ApiManager {
 		return tasks;
 	}
 	
-	public static ArrayList<Task> getTasks() throws NetworkErrorException {
-		try {
-			HttpGet get = new HttpGet(HOST + "get_tasks/");
-			try {
-				get.addHeader(new BasicScheme().authenticate(credentials, get));
-			} catch (AuthenticationException e) {
-				Log.d(TAG, e.getMessage());
-			}
-			return buildTaskList(apiCall(get));
-		} catch (NullPointerException e) {
-			throw new NetworkErrorException("404");
-		}
-	}
-	
-	
-	public static ArrayList<Task> getTasks(int state) throws NetworkErrorException {
-		if( state > 3 || state < 0)
-			throw new IllegalArgumentException("illegal state");
-		HttpGet get = new HttpGet(HOST + "get_tasks/" + Integer.toString(state) + "/");
-		try {
-			get.addHeader(new BasicScheme().authenticate(credentials, get));
-		} catch (AuthenticationException e) {
-			Log.d(TAG, e.getMessage());
-		}
-		return buildTaskList(apiCall(get));
-	}
-	
 	
 	public static ArrayList<Task> getNTasks(int count) throws NetworkErrorException {
 		HttpGet get = new HttpGet(HOST + "get_n_tasks/" + Integer.toString(count) + "/");
@@ -226,20 +184,5 @@ public class ApiManager {
 			throw new NetworkErrorException("404");
 		}
 	}
-	
-	public static String getLastSyncTime() throws NetworkErrorException {
-		try {
-			HttpGet get = new HttpGet(HOST + "get_last_sync_time/");
-			try {
-				get.addHeader(new BasicScheme().authenticate(credentials, get));
-			} catch (AuthenticationException e) {
-				Log.d(TAG, e.getMessage());
-			}
-			return apiCall(get);
-		} catch (NullPointerException e) {
-			throw new NetworkErrorException("404");
-		}
-	}
-	
-	//public static taskFinished
+
 }
