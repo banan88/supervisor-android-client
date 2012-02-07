@@ -1,25 +1,26 @@
 package org.supervisor;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+
+
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnPerRouteBean;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.params.BasicHttpParams;
@@ -29,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.accounts.NetworkErrorException;
+import android.database.Cursor;
 import android.util.Log;
 
 public class ApiManager {
@@ -76,44 +78,27 @@ public class ApiManager {
 		if (credentials == null) {
 			return "call setCredentials(user, pass) first!";
 		}
-		String result = null;
+
+		String response = null;
 		try {
-			Log.d(TAG, HOST);
-			HttpResponse response = null;
+			
 			try {
-				response = httpClient.execute(method);
-			} catch (ConnectTimeoutException e) {
-				Log.d(TAG, "conntimeoutexception");
+				response = httpClient.execute(method, new BasicResponseHandler());
+				Log.d(TAG, response);
+			} catch (HttpResponseException e) {
+				Log.d(TAG, Integer.toString(e.getStatusCode()));
+				throw new NetworkErrorException(Integer.toString(e.getStatusCode()));
 			}
-			int httpStatus = response.getStatusLine().getStatusCode();
-			if (httpStatus != 200) {
-				Log.d(TAG, Integer.toString(httpStatus)+"lololo");
-				throw new NetworkErrorException(Integer.toString(httpStatus));
-			}
-			HttpEntity entity = response.getEntity();
-			InputStream stream = entity.getContent();
-			if(entity != null)
-				entity.consumeContent();
-			try {
-				result = convertStreamToString(stream);
-			} catch (NoSuchElementException e) {
-				Log.d(TAG, "no stream in response found"); 
-			}
+			
 		} catch (IOException e) {
 			Log.d(TAG, e.getMessage() + "IO");
 			throw new NetworkErrorException("404");
 		}
-		return result;
-	}
-	
-	
-	private static String convertStreamToString(InputStream is) throws NoSuchElementException{
-		return new Scanner(is).useDelimiter("\\A").next();
+		return response;
 	}
 	
 	
 	private static ArrayList<Task> buildTaskList(String jsonString) {
-		
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		if (jsonString != null)
 			try {
@@ -158,10 +143,11 @@ public class ApiManager {
 	public static ArrayList<Task> getTasksSinceLastSync() throws NetworkErrorException {
 		try {
 			HttpGet get = new HttpGet(HOST + "get_tasks_since_last_sync/");
+			Log.d(TAG, "request to: " + HOST);
 			try {
 				get.addHeader(new BasicScheme().authenticate(credentials, get));
 			} catch (AuthenticationException e) {
-				Log.d(TAG, e.getMessage());
+				Log.d(TAG, e.getMessage() + "lalal");
 			}
 			
 		return buildTaskList(apiCall(get));
@@ -170,16 +156,42 @@ public class ApiManager {
 		}
 	}
 	
-	public static void changeTaskState(int task_id, int state) throws NetworkErrorException {
+	public static void changeTasksStates(Cursor c) throws NetworkErrorException {
+		
+		if (c.getCount() == 0) 
+			return;
+		JSONArray pendingTasks = new JSONArray();
+		StringEntity entity = null;
 		try {
-			HttpGet get = new HttpGet(HOST + "change_task_state/" + Integer.toString(task_id) +
-					"/" + Integer.toString(state) + "/");
+			while(c.moveToNext()) {
+				pendingTasks.put(
+						new JSONObject().put(
+								Long.toString(c.getLong(c.getColumnIndex(DataStorage.C_ID))), to do: add start/finish time in json
+								c.getInt(c.getColumnIndex(DataStorage.C_STATE))));
+			}
+		} catch(JSONException e) {
+			e.toString();
+			return;
+		}
+		
+		c.close();
+		try {
+			Log.d(TAG, pendingTasks.toString());
+			entity = new StringEntity(pendingTasks.toString(), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			
+		}
+		try {
+			HttpPost post = new HttpPost(HOST + "change_tasks_states/");
+			post.setEntity(entity);
+			post.addHeader("Accept", "application/json");
+			post.addHeader("Content-type", "application/json");
 			try {
-				get.addHeader(new BasicScheme().authenticate(credentials, get));
+				post.addHeader(new BasicScheme().authenticate(credentials, post));
 			} catch (AuthenticationException e) {
 				Log.d(TAG, e.getMessage());
 			}
-			apiCall(get);
+			apiCall(post);
 		} catch (NullPointerException e) {
 			throw new NetworkErrorException("404");
 		}

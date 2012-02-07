@@ -21,6 +21,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		this.setTitle(R.string.preferences_menu_screen_title);
 		global_app = (SupervisorApplication) getApplication();
 		addPreferencesFromResource(R.xml.preferences);
 		lpref = (ListPreference)findPreference(sync_pref_key);

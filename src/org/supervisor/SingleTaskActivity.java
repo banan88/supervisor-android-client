@@ -5,6 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.text.format.Time;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -26,6 +30,7 @@ public class SingleTaskActivity extends BaseActivity {
 	private TaskUpdateReceiver receiver;
 	private IntentFilter filter;
 	private Long getTaskById;
+	private int taskState;
 	
 	
 	public void onCreate(Bundle savedInstanceState) {
@@ -77,6 +82,7 @@ public class SingleTaskActivity extends BaseActivity {
 	       	localisation.setText(task.getLatitude() + " " + task.getLongitude());
 	       	desc.setText(task.getDescription());
 	       	added.setText(task.getSupervisor());
+	       	taskState = task.getState();
        	}
        	else {
        		if(getTaskById > 0) 
@@ -108,6 +114,35 @@ public class SingleTaskActivity extends BaseActivity {
 				//to do: start mapActivity
 				break;
 		}
+	}
+    
+    
+    public boolean onPrepareOptionsMenu(Menu menu) {
+    	menu.removeItem(101);
+    	menu.removeItem(102);
+    	if(taskState == 1)
+    		menu.add(Menu.NONE, 101, Menu.NONE, R.string.menu_task_current);
+    	else if (taskState == 2)
+    		menu.add(Menu.NONE, 102, Menu.NONE, R.string.menu_task_done);
+    	setUp();
+    	return true;
+    }
+    
+    
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	super.onOptionsItemSelected(item);
+    	Log.d("single task act", Integer.toString(item.getItemId()));
+    	Time t = new Time();
+    	t.setToNow();
+		switch(item.getItemId()) {	
+			case 101:
+				dataStorage.taskStarted(task.getId(), t.toMillis(false));
+				break;
+			case 102:
+				dataStorage.taskFinished(task.getId(), t.toMillis(false));
+				break;
+		}
+		return true;
 	}
     
     

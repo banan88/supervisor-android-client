@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import android.accounts.NetworkErrorException;
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,12 +27,14 @@ public class BaseActivity extends Activity implements OnClickListener{
 	private String status_text;
 	private String title;
 	private boolean isRequestOk;
+	private DataStorage dataStorage;
 	
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		global_app = (SupervisorApplication) getApplication();
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		dataStorage = global_app.getDataStorage();
 	}
 		
 
@@ -108,8 +111,12 @@ public class BaseActivity extends Activity implements OnClickListener{
 					try {
 						if(global_app.getDataStorage().isEmpty()) 
 							tasks = ApiManager.getNTasks(100);
-						else 
+						else {
+							Cursor cursor = dataStorage.getNonSyncedTasks();
+							ApiManager.changeTasksStates(cursor);
+							cursor.close();
 							tasks = ApiManager.getTasksSinceLastSync();
+						}
 					} catch (IllegalArgumentException e) {
 						throw new NetworkErrorException(e.getMessage());
 					}
@@ -123,7 +130,7 @@ public class BaseActivity extends Activity implements OnClickListener{
 						text = getString(R.string.sync_notification_body_ser_err);
 					isRequestOk = false;
 				}
-				
+				dataStorage.clearNonSyncedTasks();
 				int count = global_app.insertTaskUpdates(tasks);
 				if (count != 0) 
 					BaseActivity.this.sendBroadcast(new Intent(SupervisorApplication.UPDATE_VIEW_INTENT));

@@ -16,6 +16,7 @@
     <string name="server_url_hint">Wprowadź adres serwera</string>
     <string name="sync_pref_title">Automatyczna synchronizacja zadań</string>
     <string name="preferences_menu_title">Ustawienia</string>
+    <string name="preferences_menu_screen_title">Ustawienia Supervisor</string>
     <string name="sync_pref_title_short">Synchronizacja</string>
     <string name="username_pref_key">username</string>
     <string name="password_pref_key">password</string>
@@ -33,4 +34,6 @@
     <string name="subtitle_tasks_list">Lista zadań</string>
     <string name="subtitle_task_archive">Archiwum zadań</string>
     <string name="subtitle_time">Czas pracy</string>
+    <string name="menu_task_done">Oznacz jako zakończone</string>
+    <string name="menu_task_current">Rozpocznij to zadanie</string>
 </resources>

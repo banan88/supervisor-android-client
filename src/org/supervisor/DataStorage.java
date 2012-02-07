@@ -52,7 +52,7 @@ public class DataStorage {
 			String sql = "CREATE TABLE " + TASK_TABLE + " ( " + C_ID + " integer primary key, " +
 				C_NAME + " text, " + C_DESC + " text, " + C_LAT + " real, " + C_LON + " real, " +
 				C_STATE + " integer, " + C_CREATION_TIME + " text, " + C_LAST_MODIFIED + " text, " +
-				C_FINISH_TIME + " text, " + C_START_TIME + " text, " + C_VERSION + " integer, " + 
+				C_FINISH_TIME + " integer, " + C_START_TIME + " integer, " + C_VERSION + " integer, " + 
 				C_LAST_SYNC + " text, " + C_PENDING_SYNC + " integer, " + C_SUPERVISOR + " text);";
 			db.execSQL(sql);
 			Log.d(TAG, "tasks table created");
@@ -225,25 +225,30 @@ public class DataStorage {
 	}
 	
 	
-	public void taskStarted(long id) {
+	public void taskStarted(long id, Long dateMillis) {
+		Log.d(TAG, Long.toString(id));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '2', " + C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
+		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '2', " + C_START_TIME + " = " + dateMillis + 
+			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
 	}
 	
 	
-	public void taskFinished(long id) {
+	public void taskFinished(long id, Long dateMillis) {
+		Log.d(TAG, Long.toString(id));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '3', " + C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
+		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '3', " + C_FINISH_TIME + " = " + dateMillis + 
+			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
 	}
 	
-	public Cursor getPendingTasks() {
+	public Cursor getNonSyncedTasks() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return db.query(TASK_TABLE, null, C_PENDING_SYNC + " = " + 1, null, null, null, null);
+		return db.query(TASK_TABLE, new String[]{C_ID, C_STATE, C_START_TIME, C_FINISH_TIME},
+				C_PENDING_SYNC + " = " + 1, null, null, null, null);
 	}
 	
-	public void resetPendingStatuses() {
+	public void clearNonSyncedTasks() {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		String sql = "UPDATE " + TASK_TABLE + " SET " + C_PENDING_SYNC + " = 0;";
 		db.execSQL(sql);
@@ -289,8 +294,6 @@ public class DataStorage {
 		String day = "SELECT * FROM " + WORK_TIME_TABLE + " WHERE " + C_WORK_DATE + " = " + yyyymmdd + ";";
 		Cursor c = db.rawQuery(day, null);
 		int state = 0;
-		Log.d(TAG, Integer.toString(yyyymmdd));
-		Log.d(TAG, "c count: " + Integer.toString(c.getCount()));
 		if (c.getCount()==0) { //dla tego dnia nie bylo jeszcze czasu pracy
 			c.close();
 			return state;
@@ -313,11 +316,6 @@ public class DataStorage {
 	public Cursor getDay(int yyyymmdd) {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		return db.query(WORK_TIME_TABLE, null, C_WORK_DATE + " = " + yyyymmdd, null, null, null, null);
-	}
-	
-	public Cursor getPendingDays() {
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return db.query(WORK_TIME_TABLE, null, C_PENDING_SYNC + " = " + 1, null, null, null, null);
 	}
 	
 }
