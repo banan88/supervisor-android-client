@@ -131,15 +131,17 @@ public class SingleTaskActivity extends BaseActivity {
     
     public boolean onOptionsItemSelected(MenuItem item) {
     	super.onOptionsItemSelected(item);
-    	Log.d("single task act", Integer.toString(item.getItemId()));
     	Time t = new Time();
     	t.setToNow();
+    	Log.d("JAVA millis time: " , Long.toString(t.toMillis(false)));
 		switch(item.getItemId()) {	
 			case 101:
 				dataStorage.taskStarted(task.getId(), t.toMillis(false));
+				setUp();
 				break;
 			case 102:
 				dataStorage.taskFinished(task.getId(), t.toMillis(false));
+				setUp();
 				break;
 		}
 		return true;

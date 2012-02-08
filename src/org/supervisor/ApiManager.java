@@ -156,27 +156,26 @@ public class ApiManager {
 		}
 	}
 	
-	public static void changeTasksStates(Cursor c) throws NetworkErrorException {
+	public static boolean changeTasksStates(Cursor c) throws NetworkErrorException {
 		
 		if (c.getCount() == 0) 
-			return;
+			return false; //no need to reset nonsynced task states, there are none pending
 		JSONArray pendingTasks = new JSONArray();
 		StringEntity entity = null;
-		try {
-			while(c.moveToNext()) {
-				pendingTasks.put(
-						new JSONObject().put(
-								Long.toString(c.getLong(c.getColumnIndex(DataStorage.C_ID))), to do: add start/finish time in json
-								c.getInt(c.getColumnIndex(DataStorage.C_STATE))));
-			}
-		} catch(JSONException e) {
-			e.toString();
-			return;
-		}
+		JSONArray entry;
 		
+		while(c.moveToNext()) {
+					entry = new JSONArray();
+					entry.put(Long.toString(c.getLong(c.getColumnIndex(DataStorage.C_ID)))); 
+					entry.put(c.getInt(c.getColumnIndex(DataStorage.C_STATE)));
+					entry.put(c.getLong(c.getColumnIndex(DataStorage.C_START_TIME)));
+					entry.put(c.getLong(c.getColumnIndex(DataStorage.C_FINISH_TIME)));
+					pendingTasks.put(entry);
+		}
 		c.close();
 		try {
-			Log.d(TAG, pendingTasks.toString());
+			Log.d("JSON TIME FROM DATABASE start, finish", pendingTasks.toString());
+
 			entity = new StringEntity(pendingTasks.toString(), "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			
@@ -195,6 +194,7 @@ public class ApiManager {
 		} catch (NullPointerException e) {
 			throw new NetworkErrorException("404");
 		}
+		return true;
 	}
 
 }

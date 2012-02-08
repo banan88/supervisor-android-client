@@ -51,14 +51,14 @@ public class DataStorage {
 		public void onCreate(SQLiteDatabase db) {
 			String sql = "CREATE TABLE " + TASK_TABLE + " ( " + C_ID + " integer primary key, " +
 				C_NAME + " text, " + C_DESC + " text, " + C_LAT + " real, " + C_LON + " real, " +
-				C_STATE + " integer, " + C_CREATION_TIME + " text, " + C_LAST_MODIFIED + " text, " +
+				C_STATE + " integer, " + C_CREATION_TIME + " integer, " + C_LAST_MODIFIED + " integer, " +
 				C_FINISH_TIME + " integer, " + C_START_TIME + " integer, " + C_VERSION + " integer, " + 
-				C_LAST_SYNC + " text, " + C_PENDING_SYNC + " integer, " + C_SUPERVISOR + " text);";
+				C_LAST_SYNC + " integer, " + C_PENDING_SYNC + " integer, " + C_SUPERVISOR + " text);";
 			db.execSQL(sql);
 			Log.d(TAG, "tasks table created");
 			
 			sql = "CREATE TABLE " + WORK_TIME_TABLE + " ( " + C_WORK_DATE + " integer primary key, " + C_WORK_START + " integer, " + C_PENDING_SYNC + " integer, " +
-				C_WORK_FINISH + " text);";
+				C_WORK_FINISH + " integer);";
 			db.execSQL(sql);
 			Log.d(TAG, "work time table created");
 		}
@@ -226,7 +226,7 @@ public class DataStorage {
 	
 	
 	public void taskStarted(long id, Long dateMillis) {
-		Log.d(TAG, Long.toString(id));
+		Log.d("DATASTORAGE START TIME: " , Long.toString(dateMillis));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '2', " + C_START_TIME + " = " + dateMillis + 
 			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
@@ -235,7 +235,7 @@ public class DataStorage {
 	
 	
 	public void taskFinished(long id, Long dateMillis) {
-		Log.d(TAG, Long.toString(id));
+		Log.d("DATASTORAGE FINISH TIME: " , Long.toString(dateMillis));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '3', " + C_FINISH_TIME + " = " + dateMillis + 
 			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";

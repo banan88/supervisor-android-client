@@ -43,7 +43,11 @@ public class SupervisorApplication extends Application {
 	}
 	
 	synchronized public String getServerURL() {
-		return "http://" + prefs.getString(PreferencesActivity.server_pref_key, null) +"/";
+		String url = prefs.getString(PreferencesActivity.server_pref_key, null);
+		if (url == null || url.trim().equals(""))
+			return null;
+		else
+			return "http://" + url +"/";
 	}
 	
 	synchronized public String getSyncPeriod() {

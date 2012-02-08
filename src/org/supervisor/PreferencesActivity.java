@@ -66,6 +66,8 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 			pref = (EditTextPreference) findPreference(key);
 			if(!pref.getText().trim().equals(""))
 				pref.setSummary(pref.getText());
+			else
+				pref.setSummary(R.string.server_url_hint);
 		}
 		
 		else if (key.equals(username_pref_key) ) {
@@ -80,7 +82,7 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 				pref.setSummary(null);
 		}
 		if (!lpref.getValue().equals("5") && 
-				(global_app.isNetworkOn() == true) && //to do: launch service only if all data are set.
+				(global_app.isNetworkOn() == true) &&
 				(global_app.getUsername()!=null) && (global_app.getServerURL()!=null) && (global_app.getPassword()!=null))
 			startService(new Intent(this, SynchronisationService.class));
 	}

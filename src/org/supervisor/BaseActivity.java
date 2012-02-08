@@ -113,7 +113,10 @@ public class BaseActivity extends Activity implements OnClickListener{
 							tasks = ApiManager.getNTasks(100);
 						else {
 							Cursor cursor = dataStorage.getNonSyncedTasks();
-							ApiManager.changeTasksStates(cursor);
+							if (ApiManager.changeTasksStates(cursor)) {
+								dataStorage.clearNonSyncedTasks();
+								Log.d(TAG, "clearNonSyncedTasks called");
+							}
 							cursor.close();
 							tasks = ApiManager.getTasksSinceLastSync();
 						}
@@ -130,7 +133,6 @@ public class BaseActivity extends Activity implements OnClickListener{
 						text = getString(R.string.sync_notification_body_ser_err);
 					isRequestOk = false;
 				}
-				dataStorage.clearNonSyncedTasks();
 				int count = global_app.insertTaskUpdates(tasks);
 				if (count != 0) 
 					BaseActivity.this.sendBroadcast(new Intent(SupervisorApplication.UPDATE_VIEW_INTENT));
