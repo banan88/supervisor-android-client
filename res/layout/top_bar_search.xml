@@ -23,12 +23,12 @@
 	        	 <EditText android:id="@+id/editText1" 
 	        	 	android:minWidth="200dp"
 	        	 	android:layout_width="wrap_content" android:layout_height="wrap_content"
-	        	 	android:layout_gravity="right|center_vertical">
+	        	 	android:layout_gravity="bottom">
 	        	     <requestFocus></requestFocus>
 	        	 </EditText>
 	        	 <Button android:layout_width="wrap_content" 
 			            android:id="@+id/start_search" 
-			            android:background="@drawable/ic_search_category_default"
+			            android:background="@drawable/ic_menu_search"
 			            android:layout_height="wrap_content"
 			            android:layout_gravity="right|center_vertical"
 			         />

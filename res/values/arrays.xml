@@ -20,4 +20,10 @@
         <item>"test: 10s"</item>
     </string-array>
     
+    <string-array name="spinner_entries">
+    	<item>"Szukaj we: Wszystkie"</item>
+        <item>"Szukaj we: Archiwum"</item>
+        <item>"Szukaj we: Lista zadań"</item>
+    </string-array>
+    
 </resources>

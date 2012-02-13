@@ -2,7 +2,9 @@ package org.supervisor;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,12 +47,37 @@ public class MainScreenActivity extends BaseActivity {
 		 searchButton = (Button) findViewById(R.id.search);
 		 searchButton.setOnClickListener(this);
 	 }
-	
 	 
-	 private void syncOnClick() {
-		 if ( global_app.isNetworkOn() ) {
-				super.runForcedSync();
+	 
+	 protected void onResume() {
+	    	super.onResume();
+	    	updateLastSyncText();
+	    }    
+	 
+	 
+	 private void updateLastSyncText() {
+		 if(global_app.wasLastSyncSuccessful())
+	    		syncText.setText("Ostatnia synchronizacja: " + DateUtils.getRelativeTimeSpanString(
+	    				global_app.getLastSyncTime()));
+	    	else if (global_app.getLastSyncTime() == 0)
+	    		syncText.setText("Nie wykonano synchronizacji"); 
+	    	
+	    	else
+	    		syncText.setText("Nieudana synchronizacja: " + DateUtils.getRelativeTimeSpanString(
+	    				global_app.getLastSyncTime()));    		
+	 }
+	 
+	 
+	 public void syncOnClick() {
+		 if ( global_app.isNetworkOn() ) 
+			 super.runForcedSync();
+		 syncImage.startAnimation(AnimationUtils.loadAnimation(MainScreenActivity.this, R.anim.sync_button_rotate));
+		 syncText.postDelayed(new Thread() {
+			public void run() {
+					updateLastSyncText(); 
+					interrupt();
 			}
+		}, 1500);
 	 }
 	 
 	 

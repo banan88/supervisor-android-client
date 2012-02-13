@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Supervisor</string>
+    <string name="search_hint">Szukaj</string>
     <string name="synchronise_title">synchronizuj</string>
     <string name="dialog_text">Rozpoczęto synchronizację...</string>
     <string name="permission_description">Aktualizowanie stanu zadań</string>

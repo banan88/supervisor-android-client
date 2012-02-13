@@ -156,6 +156,7 @@ public class ApiManager {
 		}
 	}
 	
+	
 	public static boolean changeTasksStates(Cursor c) throws NetworkErrorException {
 		
 		if (c.getCount() == 0) 
@@ -182,6 +183,47 @@ public class ApiManager {
 		}
 		try {
 			HttpPost post = new HttpPost(HOST + "change_tasks_states/");
+			post.setEntity(entity);
+			post.addHeader("Accept", "application/json");
+			post.addHeader("Content-type", "application/json");
+			try {
+				post.addHeader(new BasicScheme().authenticate(credentials, post));
+			} catch (AuthenticationException e) {
+				Log.d(TAG, e.getMessage());
+			}
+			apiCall(post);
+		} catch (NullPointerException e) {
+			throw new NetworkErrorException("404");
+		}
+		return true;
+	}
+	
+	
+public static boolean changeWorkTimes(Cursor c) throws NetworkErrorException {
+		
+		if (c.getCount() == 0) 
+			return false; //no need to reset nonsynced work times, there are none pending
+		JSONArray pendingTimes = new JSONArray();
+		StringEntity entity = null;
+		JSONArray entry;
+		
+		while(c.moveToNext()) {
+					entry = new JSONArray();
+					entry.put(Integer.toString(c.getInt(c.getColumnIndex(DataStorage.C_WORK_DATE)))); 
+					entry.put(c.getLong(c.getColumnIndex(DataStorage.C_WORK_START)));
+					entry.put(c.getLong(c.getColumnIndex(DataStorage.C_WORK_FINISH)));
+					pendingTimes.put(entry);
+		}
+		c.close();
+		try {
+			Log.d("JSON TIME FROM DATABASE start, finish", pendingTimes.toString());
+
+			entity = new StringEntity(pendingTimes.toString(), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			
+		}
+		try {
+			HttpPost post = new HttpPost(HOST + "change_work_times/");
 			post.setEntity(entity);
 			post.addHeader("Accept", "application/json");
 			post.addHeader("Content-type", "application/json");

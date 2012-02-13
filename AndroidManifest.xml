@@ -18,7 +18,13 @@
         <activity android:name=".PreferencesActivity" android:label="@string/preferences_menu_title"></activity>
         <activity android:name=".TimeActivity"></activity>
         <activity android:name=".TasksActivity"></activity>
-        <activity android:name=".SearchActivity"></activity>
+        <activity android:name=".SearchActivity">
+        	<intent-filter >
+        		<action android:name="android.intent.action.SEARCH"/>
+        	</intent-filter>
+        	<meta-data android:name = "android.app.searchable"
+        				android:resource="@xml/searchable"/>
+        </activity>
         <activity android:name=".SingleTaskActivity"></activity>
         <activity android:name=".TimeActivity"></activity>
         <activity android:name=".TasksArchiveActivity"></activity>

@@ -136,6 +136,7 @@ public class DataStorage {
 		return db.query(TASK_TABLE, null, C_STATE + " LIKE " + status, null, null, null, C_LAST_MODIFIED + " DESC");
 	}
 	
+	
 	public Task getCurrentTask() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor c = db.rawQuery("SELECT * FROM " + TASK_TABLE +
@@ -254,12 +255,12 @@ public class DataStorage {
 		db.execSQL(sql);
 	}
 	
-	public Cursor getPendingWorkTimes() {
+	public Cursor getNonSyncedWorkTimes() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		return db.query(WORK_TIME_TABLE, null, C_PENDING_SYNC + " = 1", null, null, null, null);
 	}
 	
-	public void resetPendingWorkTimes() {
+	public void clearNonSyncedWorkTimes() {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		String sql = "UPDATE " + WORK_TIME_TABLE + " SET " + C_PENDING_SYNC + " = 0;";
 		db.execSQL(sql);

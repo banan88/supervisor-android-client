@@ -25,7 +25,7 @@
 			    	android:background="#90909090"/>
 	            <Button android:layout_width="wrap_content" 
 		            android:id="@+id/search" 
-		            android:background="@drawable/ic_search_category_default"
+		            android:background="@drawable/ic_menu_search"
 		            android:layout_height="wrap_content"
 		            android:layout_gravity="right|center_vertical"
 		         />

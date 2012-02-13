@@ -10,9 +10,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
+import android.text.format.Time;
 import android.util.Log;
 
 public class SupervisorApplication extends Application {
@@ -63,6 +65,34 @@ public class SupervisorApplication extends Application {
 				.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
 		return !(networkInfo == null || !networkInfo.isConnected());
 	}
+	
+	public void setLastSyncTimeToNow(boolean wasSuccessful) {
+		Editor preferenceEditor = prefs.edit();
+		Time now = new Time();
+		now.setToNow();
+		preferenceEditor.putLong("DATETIME", now.toMillis(true));
+		preferenceEditor.putBoolean("SUCCESS", wasSuccessful);
+		preferenceEditor.commit();
+	}
+	
+	public Long getLastSyncTime() {
+		return prefs.getLong("DATETIME", 0);
+	}
+	
+	public boolean wasLastSyncSuccessful() {
+		return prefs.getBoolean("SUCCESS", false);
+	}
+	
+	public int getLastSearchFilter() {
+		return prefs.getInt("FILTER", 0);
+	}
+	
+	public void setLastSearchFilter(int filter) {
+		Editor preferenceEditor = prefs.edit();
+		preferenceEditor.putInt("FILTER", filter);
+		preferenceEditor.commit();
+	}
+	
 	
 	public void generateNotification(String[] content, int icon, long timeout, boolean isOngoing, Intent startActivity) {
 

@@ -51,7 +51,7 @@ public class BaseActivity extends Activity implements OnClickListener{
 			case R.id.synchronise:
 				Log.d(TAG, "synchronizacja");
 				if ( global_app.isNetworkOn() )
-					runForcedSync();
+					syncOnClick();
 				else
 					Toast.makeText(this, R.string.dialog_text_no_network, Toast.LENGTH_SHORT).show();		
 				break;
@@ -63,6 +63,9 @@ public class BaseActivity extends Activity implements OnClickListener{
 		}
 		return true;
 	}
+	
+	
+	public void syncOnClick() { runForcedSync(); }
 	
 	
 	public void onClick(View v) {
@@ -82,6 +85,14 @@ public class BaseActivity extends Activity implements OnClickListener{
 	
 	public void runForcedSync() {
 			new ForcedSync().execute();
+	}
+	
+	
+	public boolean onSearchRequested() {
+		Intent intent = new Intent(this, SearchActivity.class);
+		intent.setAction(Intent.ACTION_SEARCH);
+		startActivity(intent);
+		return false;
 	}
 
 
@@ -118,7 +129,12 @@ public class BaseActivity extends Activity implements OnClickListener{
 								Log.d(TAG, "clearNonSyncedTasks called");
 							}
 							cursor.close();
+							cursor = dataStorage.getNonSyncedWorkTimes();
+							if (ApiManager.changeWorkTimes(cursor))
+								dataStorage.clearNonSyncedWorkTimes();
+							cursor.close();
 							tasks = ApiManager.getTasksSinceLastSync();
+							global_app.setLastSyncTimeToNow(true);
 						}
 					} catch (IllegalArgumentException e) {
 						throw new NetworkErrorException(e.getMessage());
@@ -132,6 +148,7 @@ public class BaseActivity extends Activity implements OnClickListener{
 					else 
 						text = getString(R.string.sync_notification_body_ser_err);
 					isRequestOk = false;
+					global_app.setLastSyncTimeToNow(false);
 				}
 				int count = global_app.insertTaskUpdates(tasks);
 				if (count != 0) 
