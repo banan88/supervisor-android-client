@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 
@@ -31,6 +32,7 @@ public class SingleTaskActivity extends BaseActivity {
 	private IntentFilter filter;
 	private Long getTaskById;
 	private int taskState;
+	private LinearLayout inner;
 	
 	
 	public void onCreate(Bundle savedInstanceState) {
@@ -55,6 +57,7 @@ public class SingleTaskActivity extends BaseActivity {
 		map.setOnClickListener(this);
 		logo = (Button) findViewById(R.id.logo);
 		logo.setOnClickListener(this);
+		inner = (LinearLayout) findViewById(R.id.inner);
 	}
 	
     
@@ -65,6 +68,7 @@ public class SingleTaskActivity extends BaseActivity {
     		task = dataStorage.getCurrentTask();
     	
        	if (task != null) {
+       		inner.setVisibility(View.VISIBLE);
        		String defaultCancelled = " (Anulowane";
        		switch(task.getState()) {
        			case 3:
@@ -88,8 +92,8 @@ public class SingleTaskActivity extends BaseActivity {
        		if(getTaskById > 0) 
        			name.setText("ZADANIE NIE ISTNIEJE");
        		else
-       			name.setText("NIE WYKONUJESZ ZADNEGO ZADANIA");
-       		
+       			name.setText("NIE WYKONUJESZ ŻADNEGO ZADANIA");
+       			inner.setVisibility(View.INVISIBLE);
        	}
     }
    

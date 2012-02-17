@@ -27,7 +27,7 @@ public class BaseActivity extends Activity implements OnClickListener{
 	private String status_text;
 	private String title;
 	private boolean isRequestOk;
-	private DataStorage dataStorage;
+	protected DataStorage dataStorage;
 	
 	
 	protected void onCreate(Bundle savedInstanceState) {
@@ -109,8 +109,8 @@ public class BaseActivity extends Activity implements OnClickListener{
 				try {
 					new URL(adress);
 				} catch (MalformedURLException e) {
-					Log.d(TAG, adress);
-					Log.d(TAG, e.getMessage());
+					Log.d(TAG, adress + " : ");
+					Log.d(TAG, e.getMessage() + " : ");
 				}
 				ApiManager.HOST = adress;
 				int icon = R.drawable.ic_menu_refresh;
@@ -137,10 +137,12 @@ public class BaseActivity extends Activity implements OnClickListener{
 							global_app.setLastSyncTimeToNow(true);
 						}
 					} catch (IllegalArgumentException e) {
+						Log.d(TAG, e.getMessage() + " illegal arg");
 						throw new NetworkErrorException(e.getMessage());
 					}
 						
 				} catch (NetworkErrorException e) {	
+					Log.d(TAG, e.getMessage());
 					intent = new Intent(BaseActivity.this, PreferencesActivity.class);
 					status_text = getString(R.string.sync_status_bar_txt_error);
 					if (e.getMessage().equals("401")) 

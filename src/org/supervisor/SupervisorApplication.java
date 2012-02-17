@@ -139,6 +139,7 @@ public class SupervisorApplication extends Application {
 			values.put(DataStorage.C_LAST_SYNC, task.getLastSynced());
 			dataStorage.insert(values);		
 		}
+		dataStorage.repopulateFTS(); //this is a hack - should maintain fts state between updates
 		dataStorage.close();
 		return tasks.size();
 	}		

@@ -30,6 +30,6 @@
 		android:layout_toRightOf="@id/listitem_icon"
 		android:layout_alignParentRight="true"
 		android:layout_alignParentBottom="true"
-		android:textColor="#010101"/>
+		android:textColor="@color/gray"/>
 	
 </RelativeLayout>

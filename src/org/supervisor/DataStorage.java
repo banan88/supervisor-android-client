@@ -31,10 +31,11 @@ public class DataStorage {
 	static final String C_LAST_SYNC = "last_synced";
 	static final String C_SUPERVISOR = "supervisor";
 	static final String C_PENDING_SYNC = "state_changed"; //flaga okreslajaca czy wyslac stan/czas pracy na serwer w trakcie synchronizacji 0/1
-	static final String WORK_TIME_TABLE = "work_time";
+	private static final String WORK_TIME_TABLE = "work_time";
 	static final String C_WORK_START = "work_start";
 	static final String C_WORK_FINISH = "work_finish";
 	static final String C_WORK_DATE = "work_date";
+	private static final String FTS_TABLE = "text_search";
 	
 	final DBHelper dbHelper;
 	
@@ -61,19 +62,33 @@ public class DataStorage {
 				C_WORK_FINISH + " integer);";
 			db.execSQL(sql);
 			Log.d(TAG, "work time table created");
+			
+			db.execSQL("CREATE VIRTUAL TABLE " + FTS_TABLE + " USING fts3(" + 
+					C_ID + ", " + C_STATE + ", " + C_DESC + ", " + C_NAME + ", "  + C_LAST_MODIFIED + ", " + C_SUPERVISOR +");");
+			Log.d(TAG, "full text search virtual table created");
 		}
 
 		
 		public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 			String sql = "DROP TABLE IF EXISTS " + TASK_TABLE + ";";
 			db.execSQL(sql);
-			sql = "DROP TABLE " + WORK_TIME_TABLE+ ";";
+			sql = "DROP TABLE IF EXISTS " + WORK_TIME_TABLE+ ";";
+			db.execSQL(sql);
+			sql = "DROP TABLE IF EXISTS " + FTS_TABLE+ ";";
 			db.execSQL(sql);
 			Log.d(TAG, "tables dropped");
 			
 			onCreate(db);
 		}
 		
+	}
+	
+	
+	public void repopulateFTS() {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		String sql = "insert into " + FTS_TABLE + " select " + C_ID + ", " + C_STATE + ", " + C_DESC + ", " + 
+			C_NAME + ", " + C_LAST_MODIFIED + ", " + C_SUPERVISOR + " from " + TASK_TABLE +";";
+		db.execSQL(sql);
 	}
 	
 	
@@ -95,6 +110,7 @@ public class DataStorage {
 	public DataStorage(Context context) {
 		dbHelper = new DBHelper(context);
 		Log.d(TAG, "DataStorage initialized");
+		repopulateFTS();
 	}
 	
 	
@@ -127,7 +143,7 @@ public class DataStorage {
 	
 	public Cursor getActiveTasks() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return db.query(TASK_TABLE, null, C_STATE + " NOT IN ('3', '0')", null, null, null, C_STATE + " DESC, " + C_LAST_MODIFIED + " DESC");		
+		return db.query(TASK_TABLE, null, C_STATE + " NOT IN (3, 0)", null, null, null, C_STATE + " DESC, " + C_LAST_MODIFIED + " DESC");		
 	}
 	
 	
@@ -140,7 +156,7 @@ public class DataStorage {
 	public Task getCurrentTask() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor c = db.rawQuery("SELECT * FROM " + TASK_TABLE +
-				" WHERE " + C_STATE + " = '2'", null);
+				" WHERE " + C_STATE + " = 2", null);
 		if(c != null) {
 			if(c.moveToFirst()) {
 				Log.d(TAG, "move to first true");
@@ -181,7 +197,7 @@ public class DataStorage {
 	
 	public Cursor getDoneAndCancelledTasks() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		return db.query(TASK_TABLE, null, C_STATE + " IN ('3', '0')", null, null, null, C_LAST_MODIFIED + " DESC");
+		return db.query(TASK_TABLE, null, C_STATE + " IN (3, 0)", null, null, null, C_LAST_MODIFIED + " DESC");
 	}
 	
 	public Task getTaskById(long id) {
@@ -226,10 +242,37 @@ public class DataStorage {
 	}
 	
 	
+	public Cursor searchArchivedTasks(String keyword) {
+		Log.d(TAG, "szukam w archiwum");
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		String query = "SELECT DISTINCT * FROM " + FTS_TABLE + " WHERE " + 
+			C_STATE + " IN (3,0) AND " + FTS_TABLE + " MATCH ? ORDER BY " + C_LAST_MODIFIED + ";";
+		return db.rawQuery(query, new String[] { keyword+"*" });
+	}
+	
+	
+	public Cursor searchListOfTasks(String keyword) {
+		Log.d(TAG, "szukam w liscie zadan");
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		String query = "SELECT DISTINCT * FROM " + FTS_TABLE + " WHERE " + 
+			C_STATE + " NOT IN (3,0) AND " + FTS_TABLE + " MATCH ? ORDER BY " + C_LAST_MODIFIED + ";";
+		return db.rawQuery(query, new String[] { keyword+"*" });
+	}
+	
+	
+	public Cursor searchAllTasks(String keyword) {
+		Log.d(TAG, "szukam wszedzie");
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		String query = "SELECT DISTINCT * FROM " + FTS_TABLE + " WHERE " +
+			FTS_TABLE + " MATCH ? ORDER BY " + C_LAST_MODIFIED + ";";
+		return db.rawQuery(query, new String[] { keyword+"*" });
+	}
+	
+	
 	public void taskStarted(long id, Long dateMillis) {
 		Log.d("DATASTORAGE START TIME: " , Long.toString(dateMillis));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '2', " + C_START_TIME + " = " + dateMillis + 
+		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = 2, " + C_START_TIME + " = " + dateMillis + 
 			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
 	}
@@ -238,7 +281,7 @@ public class DataStorage {
 	public void taskFinished(long id, Long dateMillis) {
 		Log.d("DATASTORAGE FINISH TIME: " , Long.toString(dateMillis));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = '3', " + C_FINISH_TIME + " = " + dateMillis + 
+		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = 3, " + C_FINISH_TIME + " = " + dateMillis + 
 			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
 	}

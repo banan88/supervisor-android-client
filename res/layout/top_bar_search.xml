@@ -20,7 +20,7 @@
 	        />
 	        <LinearLayout android:layout_height="fill_parent" android:layout_gravity="right" android:layout_width="match_parent"
 	        android:gravity="right">
-	        	 <EditText android:id="@+id/editText1" 
+	        	 <EditText android:id="@+id/searchText" 
 	        	 	android:minWidth="200dp"
 	        	 	android:layout_width="wrap_content" android:layout_height="wrap_content"
 	        	 	android:layout_gravity="bottom">

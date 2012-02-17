@@ -50,8 +50,6 @@ public class ApiManager {
 	public static void setCredentials(String username, String password) {
 		if (username != null && password != null) 
 			credentials = new UsernamePasswordCredentials(username, password);
-		else
-			credentials = new UsernamePasswordCredentials("", "");
 	}
 
 
@@ -75,10 +73,7 @@ public class ApiManager {
 	
 	private static String apiCall(HttpRequestBase method) throws NetworkErrorException{
 		
-		if (credentials == null) {
-			return "call setCredentials(user, pass) first!";
-		}
-
+		Log.d(TAG, "apiCall()");
 		String response = null;
 		try {
 			
@@ -99,6 +94,7 @@ public class ApiManager {
 	
 	
 	private static ArrayList<Task> buildTaskList(String jsonString) {
+		Log.d(TAG, "buildTaskList()");
 		ArrayList<Task> tasks = new ArrayList<Task>();
 		if (jsonString != null)
 			try {
@@ -130,11 +126,17 @@ public class ApiManager {
 	
 	
 	public static ArrayList<Task> getNTasks(int count) throws NetworkErrorException {
+		Log.d(TAG, "getNTasks()");
+		
 		HttpGet get = new HttpGet(HOST + "get_n_tasks/" + Integer.toString(count) + "/");
 		try {
-			get.addHeader(new BasicScheme().authenticate(credentials, get));
-		} catch (AuthenticationException e) {
-			Log.d(TAG, e.getMessage());
+			try {
+				get.addHeader(new BasicScheme().authenticate(credentials, get));
+			} catch (AuthenticationException e) {
+				throw new IllegalArgumentException();
+			}
+		} catch (IllegalArgumentException e) {
+			throw new NetworkErrorException("401");
 		}
 		return buildTaskList(apiCall(get));
 	}
@@ -145,12 +147,15 @@ public class ApiManager {
 			HttpGet get = new HttpGet(HOST + "get_tasks_since_last_sync/");
 			Log.d(TAG, "request to: " + HOST);
 			try {
-				get.addHeader(new BasicScheme().authenticate(credentials, get));
-			} catch (AuthenticationException e) {
-				Log.d(TAG, e.getMessage() + "lalal");
+				try {
+					get.addHeader(new BasicScheme().authenticate(credentials, get));
+				} catch (AuthenticationException e) {
+					Log.d(TAG, e.getMessage() + "lalal");
+				}
+			} catch (IllegalArgumentException e) {
+				throw new NetworkErrorException("401");
 			}
-			
-		return buildTaskList(apiCall(get));
+			return buildTaskList(apiCall(get));
 		} catch (NullPointerException e) {
 			throw new NetworkErrorException("404");
 		}

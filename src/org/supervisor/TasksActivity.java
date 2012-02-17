@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
 
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -148,7 +149,8 @@ public class TasksActivity extends BaseActivity{
             
             String s = cursor.getString(cursor.getColumnIndex(DataStorage.C_NAME));
             holder.textView1.setText(s);
-            s = cursor.getString(cursor.getColumnIndex(DataStorage.C_LAST_MODIFIED));
+            s = "zmodyfikowane: " + DateUtils.getRelativeTimeSpanString(
+            		cursor.getLong(cursor.getColumnIndex(DataStorage.C_LAST_MODIFIED))).toString();
             holder.textView2.setText(s);
 
             return rowView;
