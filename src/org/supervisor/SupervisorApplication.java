@@ -2,6 +2,7 @@ package org.supervisor;
 
 import java.util.ArrayList;
 
+import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -13,6 +14,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.util.Log;
@@ -24,6 +26,11 @@ public class SupervisorApplication extends Application {
 	private DataStorage dataStorage;
 	private NotificationManager mgr;
 	public static final String UPDATE_VIEW_INTENT = "org.supervisor.UPDATE_VIEW";
+	public static final int CREDENTIALS_ERR = 401;
+	public static final int SERVER_ERR = 404;
+	public static final int SYNC_START = 0;
+	public static final int SYNC_COUNT = 200;
+	
 	
 	public void onCreate() {
 		super.onCreate();	
@@ -32,17 +39,68 @@ public class SupervisorApplication extends Application {
 		mgr = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 	}
 	
-	synchronized public DataStorage getDataStorage() {
+	
+	public void reloadAlarm() {
+		Log.d(TAG, "reloadAlarm() begins");
+		AlarmManager alarmMgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+		PendingIntent pendingIntent =
+            PendingIntent.getBroadcast(this, 0, new Intent(this, SyncRequestReceiver.class), 0);
+		alarmMgr.cancel(pendingIntent);
+		Long interval = 0L;
+		if(!getSyncPeriod().equals("5")) {
+			/* 0 - 5min  300000
+			 * 1 - 10min 600000
+			 * 2 - 15 min 900000
+			 * 3 - 30min 1800000
+			 * 4 - 60min 3600000
+			 * 5 - off
+			 * 6 - 10s 10000
+			 */
+			
+			switch (Integer.parseInt(getSyncPeriod())){
+				case 0:
+					interval = 300000L;
+					break;
+				case 1:
+					interval = 600000L;
+					break;
+				case 2:
+					interval = 900000L;
+					break;
+				case 3:
+					interval = 1800000L;
+					break;
+				case 4:
+					interval = 3600000L;
+					break;
+				case 6:
+					interval = 10000L;
+					break;
+				
+			}	 Log.d(TAG, "getSyncPeriod: " + getSyncPeriod());
+			
+		    // use inexact repeating which is easier on battery (system can phase events and not wake at exact times)
+		    alarmMgr.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,  SystemClock.elapsedRealtime(), interval
+	               , pendingIntent);
+		}
+		Log.d(TAG, "reloadAlarm() interval= " + Long.toString(interval));
+	}
+	
+	
+	public DataStorage getDataStorage() {
 		return dataStorage;
 	}
+	
 	
 	synchronized public String getUsername() {
 		return prefs.getString(PreferencesActivity.username_pref_key, null);
 	}
 	
+	
 	synchronized public String getPassword() {
 		return prefs.getString(PreferencesActivity.password_pref_key, null);
 	}
+	
 	
 	synchronized public String getServerURL() {
 		String url = prefs.getString(PreferencesActivity.server_pref_key, null);
@@ -52,19 +110,23 @@ public class SupervisorApplication extends Application {
 			return "http://" + url +"/";
 	}
 	
+	
 	synchronized public String getSyncPeriod() {
 		return prefs.getString(PreferencesActivity.sync_pref_key, null);
 	}
 	
+	
 	public synchronized void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 	}
+	
 	
 	synchronized public boolean isNetworkOn() {
 		NetworkInfo networkInfo = ((ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
 		return !(networkInfo == null || !networkInfo.isConnected());
 	}
+	
 	
 	public void setLastSyncTimeToNow(boolean wasSuccessful) {
 		Editor preferenceEditor = prefs.edit();
@@ -75,13 +137,16 @@ public class SupervisorApplication extends Application {
 		preferenceEditor.commit();
 	}
 	
+	
 	public Long getLastSyncTime() {
 		return prefs.getLong("DATETIME", 0);
 	}
 	
+	
 	public boolean wasLastSyncSuccessful() {
 		return prefs.getBoolean("SUCCESS", false);
 	}
+	
 	
 	public int getLastSearchFilter() {
 		return prefs.getInt("FILTER", 0);
@@ -94,28 +159,59 @@ public class SupervisorApplication extends Application {
 	}
 	
 	
-	public void generateNotification(String[] content, int icon, long timeout, boolean isOngoing, Intent startActivity) {
-
-		Notification not = new Notification(icon, content[0], System.currentTimeMillis());
-		PendingIntent pi = PendingIntent.getActivity(this, 0, startActivity, 0);
-		not.setLatestEventInfo(this, content[1], content[2], pi);
-		not.flags |= Notification.FLAG_AUTO_CANCEL; 
-		mgr.notify(1, not);
-		if(!isOngoing) {
-			final long tmp = timeout;
-				new Thread() {
-		
-					public void run() {
-						try {
-							sleep(tmp);
-						} catch (InterruptedException e) {
-							mgr.cancel(1);
-						}
-						mgr.cancel(1);
-					}
-				}.run();
-		}
+	public void cancelSyncNotification() {
+		mgr.cancel(SYNC_START);
+		Log.d(TAG, "called cancelSyncNotification");
 	}
+	
+	
+	public void generateNotificationSync() {
+		Notification not = new Notification(R.drawable.ic_menu_refresh, 
+				getString(R.string.sync_notification_body), 
+				System.currentTimeMillis());
+		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, MainScreenActivity.class), 0);
+		not.setLatestEventInfo(this, getString(R.string.sync_notification_title), 
+				getString(R.string.sync_notification_body), pi);
+		mgr.notify(SYNC_START, not);
+	}
+	
+	
+	public void generateNotificationChanges(int count) {
+		Notification not = new Notification(R.drawable.ic_menu_refresh, 
+				getString(R.string.sync_notification_changes) + " " + Integer.toString(count),
+				System.currentTimeMillis());
+		not.flags |= Notification.FLAG_AUTO_CANCEL;
+		not.flags |= Notification.DEFAULT_SOUND;
+		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, MainScreenActivity.class), 0);
+		not.setLatestEventInfo(this, getString(R.string.sync_notification_title), 
+				getString(R.string.sync_notification_changes) + " " + Integer.toString(count) , pi);
+		mgr.notify(SYNC_START, not);
+	}
+	
+	
+	public void generateNotificationError401() {
+		Notification not = new Notification(R.drawable.ic_menu_refresh, 
+				getString(R.string.sync_notification_body_err),
+				System.currentTimeMillis());
+		not.flags |= Notification.FLAG_AUTO_CANCEL; 
+		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, PreferencesActivity.class), 0);
+		not.setLatestEventInfo(this, getString(R.string.sync_notification_title), 
+				getString(R.string.sync_notification_body_err), pi);
+		mgr.notify(CREDENTIALS_ERR, not);
+	}
+	
+	
+	public void generateNotificationError404() {
+		Notification not = new Notification(R.drawable.ic_menu_refresh, 
+				getString(R.string.sync_notification_body_ser_err),
+				System.currentTimeMillis());
+		not.flags |= Notification.FLAG_AUTO_CANCEL; 
+		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, PreferencesActivity.class), 0);
+		not.setLatestEventInfo(this, getString(R.string.sync_notification_title), 
+				getString(R.string.sync_notification_body_ser_err), pi);
+		mgr.notify(SERVER_ERR, not);
+	}
+	
 	
 	public synchronized int insertTaskUpdates(ArrayList<Task> tasks) {
 		

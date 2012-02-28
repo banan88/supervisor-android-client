@@ -2,12 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.supervisor"
       android:versionCode="1"
-      android:versionName="1.0">
+      android:versionName="1.0" >
     <uses-sdk android:minSdkVersion="8" />
     
     <uses-permission android:name="android.permission.INTERNET"	></uses-permission>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
-    <application android:name="SupervisorApplication" android:icon="@drawable/keylauncher" android:label="@string/app_name">
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <application android:name="SupervisorApplication" android:debuggable="true" 
+        android:icon="@drawable/keylauncher" android:label="@string/app_name">
+        <uses-library android:name="com.google.android.maps"/>
+        <activity android:name=".DefaultMapActivity" />
         <activity android:name=".MainScreenActivity"
                   android:label="@string/app_name">
             <intent-filter>
@@ -19,11 +23,6 @@
         <activity android:name=".TimeActivity"></activity>
         <activity android:name=".TasksActivity"></activity>
         <activity android:name=".SearchActivity">
-        	<intent-filter >
-        		<action android:name="android.intent.action.SEARCH"/>
-        	</intent-filter>
-        	<meta-data android:name = "android.app.searchable"
-        				android:resource="@xml/searchable"/>
         </activity>
         <activity android:name=".SingleTaskActivity"></activity>
         <activity android:name=".TimeActivity"></activity>
@@ -38,6 +37,10 @@
         	<intent-filter>
         		<action android:name="android.intent.action.BOOT_COMPLETED" />
         	</intent-filter>
+        </receiver>
+        
+        <receiver android:name=".SyncRequestReceiver">
+        	
         </receiver>
 
     </application>

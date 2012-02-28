@@ -141,10 +141,12 @@ public class SingleTaskActivity extends BaseActivity {
 		switch(item.getItemId()) {	
 			case 101:
 				dataStorage.taskStarted(task.getId(), t.toMillis(false));
+				taskState = 2;
 				setUp();
 				break;
 			case 102:
 				dataStorage.taskFinished(task.getId(), t.toMillis(false));
+				taskState = 0;
 				setUp();
 				break;
 		}

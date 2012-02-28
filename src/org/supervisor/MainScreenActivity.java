@@ -20,6 +20,8 @@ public class MainScreenActivity extends BaseActivity {
 	private Button timeButton;
 	private TextView syncText;
 	private Button syncImage;
+	private Button settings;
+	private Button map;
 	
 	
 	 public void onCreate(Bundle savedInstanceState) {
@@ -46,6 +48,10 @@ public class MainScreenActivity extends BaseActivity {
 		 syncImage.setOnClickListener(this);
 		 searchButton = (Button) findViewById(R.id.search);
 		 searchButton.setOnClickListener(this);
+		 settings = (Button) findViewById(R.id.settings);
+		 settings.setOnClickListener(this);
+		 map = (Button) findViewById(R.id.map);
+		 map.setOnClickListener(this);
 	 }
 	 
 	 
@@ -69,15 +75,15 @@ public class MainScreenActivity extends BaseActivity {
 	 
 	 
 	 public void syncOnClick() {
-		 if ( global_app.isNetworkOn() ) 
-			 super.runForcedSync();
-		 syncImage.startAnimation(AnimationUtils.loadAnimation(MainScreenActivity.this, R.anim.sync_button_rotate));
-		 syncText.postDelayed(new Thread() {
+		if ( global_app.isNetworkOn() ) 
+			super.runForcedSync();
+		syncImage.startAnimation(AnimationUtils.loadAnimation(MainScreenActivity.this, R.anim.sync_button_rotate));
+		syncText.postDelayed(new Thread() {
 			public void run() {
 					updateLastSyncText(); 
 					interrupt();
 			}
-		}, 1500);
+		}, 3000);
 	 }
 	 
 	 
@@ -105,6 +111,11 @@ public class MainScreenActivity extends BaseActivity {
 			case R.id.sync_textbutton:
 				syncOnClick();
 				break;
+			case R.id.settings:
+				startActivity(new Intent(this, PreferencesActivity.class));
+				break;
+			case R.id.map:
+				startActivity(new Intent(this, DefaultMapActivity.class));
 			}
 		}
 }

@@ -121,8 +121,16 @@ public class DataStorage {
 	
 	public void insert(ContentValues values) {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		ContentValues ftsVals = new ContentValues(); //stripped values for ftstable
+		ftsVals.put(C_ID, values.getAsLong(C_ID));
+		ftsVals.put(C_STATE, values.getAsInteger(C_STATE));
+		ftsVals.put(C_DESC, values.getAsString(C_DESC));
+		ftsVals.put(C_NAME, values.getAsString(C_NAME));
+		ftsVals.put(C_LAST_MODIFIED, values.getAsLong(C_LAST_MODIFIED));
+		ftsVals.put(C_SUPERVISOR, values.getAsString(C_SUPERVISOR));
 		try {
 			db.insertOrThrow(TASK_TABLE, null, values);
+			db.insert(FTS_TABLE, null, ftsVals);
 		} catch (SQLException e) {
 			Log.d(TAG, "exception: " + e.getLocalizedMessage());
 			Long id = values.getAsLong(C_ID);
@@ -133,6 +141,7 @@ public class DataStorage {
 				cursor.moveToFirst(); 
 				if(cursor.getLong(0) != remote_ver) {
 					db.update(TASK_TABLE, values, C_ID + " = " + id, null);
+					db.update(FTS_TABLE, ftsVals, C_ID + " = " + id, null);
 					Log.d(TAG, "duplicate id, task was updated");
 				}
 			}
@@ -172,7 +181,7 @@ public class DataStorage {
 					start_time = null;
 				}
 				
-				Task task = new Task(
+				Task task = new Task(//
 						c.getLong(0),
 						c.getString(1),
 						c.getString(2),
@@ -275,6 +284,8 @@ public class DataStorage {
 		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = 2, " + C_START_TIME + " = " + dateMillis + 
 			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
+		sql = "UPDATE " + FTS_TABLE + " SET " + C_STATE + " = 2 WHERE " + C_ID + " = " + id + ";";
+		db.execSQL(sql);
 	}
 	
 	
@@ -283,6 +294,8 @@ public class DataStorage {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = 3, " + C_FINISH_TIME + " = " + dateMillis + 
 			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
+		db.execSQL(sql);
+		sql = "UPDATE " + FTS_TABLE + " SET " + C_STATE + " = 3 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
 	}
 	

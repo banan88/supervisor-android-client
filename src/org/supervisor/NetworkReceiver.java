@@ -19,11 +19,8 @@ public class NetworkReceiver extends BroadcastReceiver {
 			Log.d("netreceiver", "net receiver started service");
 			SupervisorApplication global_app = (SupervisorApplication) context.getApplicationContext();
 			if(!global_app.getSyncPeriod().equals("5"))
-				context.startService(new Intent(context, SynchronisationService.class));
-		}
-		else {
-			Log.d("netreceiver", "net receiver stopped service");
-			context.stopService(new Intent(context, SynchronisationService.class));
+				if(!global_app.wasLastSyncSuccessful())
+					global_app.reloadAlarm(); //reload alarm only if last sync was unsuccessfull - probably because of down network
 		}
 		
 	}

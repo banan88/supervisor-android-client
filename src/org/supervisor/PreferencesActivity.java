@@ -1,12 +1,12 @@
 package org.supervisor;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
+import android.util.Log;
 
 public class PreferencesActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener{
 	
@@ -55,11 +55,15 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
 			String key) {
+		Log.d(TAG, "sharedPreferenceChanged() called: " + key);
+		
+		// setting hints for user:
+		
 		lpref = (ListPreference) findPreference(sync_pref_key);
 		if (key.equals(sync_pref_key)) {
-			lpref.setSummary(lpref.getEntry());
-			if(lpref.getValue().equals("5") || ((SupervisorApplication) getApplication()).isNetworkOn() == false)
-				stopService(new Intent(this, SynchronisationService.class));
+			lpref.setSummary(lpref.getEntry());	
+			if( allDataSupplied() )
+				global_app.reloadAlarm();
 		}
 		
 		else if (key.equals(server_pref_key)) {
@@ -68,28 +72,31 @@ public class PreferencesActivity extends PreferenceActivity implements OnSharedP
 				pref.setSummary(pref.getText());
 			else
 				pref.setSummary(R.string.server_url_hint);
+			if( allDataSupplied() )
+				global_app.reloadAlarm();
 		}
 		
 		else if (key.equals(username_pref_key) ) {
 			pref = (EditTextPreference) findPreference(key);
 			if(!pref.getText().trim().equals(""))
 				pref.setSummary(pref.getText());
+			if( allDataSupplied() )
+				global_app.reloadAlarm();
 		}
 		
 		else if (key.equals(password_pref_key) ) {
 			pref = (EditTextPreference) findPreference(key);
 			if(!pref.getText().trim().equals(""))
 				pref.setSummary(null);
+			if( allDataSupplied() )
+				global_app.reloadAlarm();
 		}
-		if (!lpref.getValue().equals("5") && 
-				(global_app.isNetworkOn() == true) &&
-				(global_app.getUsername()!=null) && (global_app.getServerURL()!=null) && (global_app.getPassword()!=null))
-			startService(new Intent(this, SynchronisationService.class));
+		
 	}
-
-
 	
-	
-	
+	private boolean allDataSupplied() {
+		//if credentials & server are supplied AND sync period changed - reload scheduled alarm of alarmmanager
+		return ((global_app.getUsername()!=null) && (global_app.getServerURL()!=null) && (global_app.getPassword()!=null));
+	}
 	
 }

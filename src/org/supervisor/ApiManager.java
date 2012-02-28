@@ -36,7 +36,7 @@ import android.util.Log;
 public class ApiManager {
 
 	private static final String TAG = ApiManager.class.getSimpleName();
-	private static final int CONN_TIMEOUT = 1000;
+	private static final int CONN_TIMEOUT = 10000;
 	private static final int MAX_TOTAL_CONN = 10;
 	private static final int MAX_CONN_PER_ROUTE = 10;
 	private static UsernamePasswordCredentials credentials;
@@ -61,7 +61,6 @@ public class ApiManager {
 		BasicHttpParams params = new BasicHttpParams();
 		HttpConnectionParams.setConnectionTimeout(params, CONN_TIMEOUT);
 		HttpConnectionParams.setSoTimeout(params, CONN_TIMEOUT);
-		ConnManagerParams.setTimeout(params, 100);
 		ConnManagerParams.setMaxTotalConnections(params, MAX_TOTAL_CONN);
 		ConnManagerParams.setMaxConnectionsPerRoute(params, new ConnPerRouteBean(MAX_CONN_PER_ROUTE));
 		
@@ -73,12 +72,17 @@ public class ApiManager {
 	
 	private static String apiCall(HttpRequestBase method) throws NetworkErrorException{
 		
-		Log.d(TAG, "apiCall()");
+		Log.d("apiCall()", method.getURI().toString());
 		String response = null;
+		method.setHeader("User-Agent", "ANDROID DEBUG DEVICE"); 
 		try {
 			
 			try {
-				response = httpClient.execute(method, new BasicResponseHandler());
+				try {
+					response = httpClient.execute(method, new BasicResponseHandler());
+				} catch (IllegalStateException e) {
+					throw new NetworkErrorException("404");
+				}
 				Log.d(TAG, response);
 			} catch (HttpResponseException e) {
 				Log.d(TAG, Integer.toString(e.getStatusCode()));
@@ -86,16 +90,18 @@ public class ApiManager {
 			}
 			
 		} catch (IOException e) {
-			Log.d(TAG, e.getMessage() + "IO");
+			Log.d(TAG, "IO");
 			throw new NetworkErrorException("404");
 		}
+		Log.d("odpowiedz: ", response);
 		return response;
 	}
 	
 	
-	private static ArrayList<Task> buildTaskList(String jsonString) {
+	private static ArrayList<Task> buildTaskList(String jsonString) throws NetworkErrorException {
 		Log.d(TAG, "buildTaskList()");
 		ArrayList<Task> tasks = new ArrayList<Task>();
+		Log.d("JSONstring:", "content: " + jsonString);
 		if (jsonString != null)
 			try {
 				JSONArray all = new JSONArray(jsonString);
@@ -119,7 +125,7 @@ public class ApiManager {
 					));
 				}
 			} catch (JSONException e) {
-				Log.d(TAG, e.getMessage());
+				Log.d("JSONException in buildTaskList()", e.getLocalizedMessage());
 			}
 		return tasks;
 	}

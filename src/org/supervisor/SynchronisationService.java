@@ -5,143 +5,89 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import android.accounts.NetworkErrorException;
-import android.app.Service;
+import android.app.IntentService;
 import android.content.Intent;
-import android.os.IBinder;
+import android.database.Cursor;
 import android.util.Log;
 
 
 
 
-public class SynchronisationService extends Service {
+public class SynchronisationService extends IntentService {
 
 	private static final String TAG = SynchronisationService.class.getSimpleName();
-	private SynchronisationThread thread;
-	private String status_text;
-	private String text;
-	private String title;
-	private boolean isRequestOk;
+	private DataStorage dataStorage;
+	private SupervisorApplication global_app;
 	
-	public IBinder onBind(Intent intent) {
-		return null;
+	
+	public SynchronisationService() {
+		super(TAG);
 	}
+	//.
 	
-	
-	public void onCreate(){
-		super.onCreate();
-		thread = new SynchronisationThread();
-		Log.d(TAG, "onCreate() called");
-	}
-	
-	
-	public void onDestroy() {
-		super.onDestroy();
-		thread.interrupt();
-		thread = null;
-		Log.d(TAG, "SERVICE STOPPED : onDestroy() called");
-	}
+	public void onHandleIntent(Intent intent) {
+		Log.d(TAG, "onHandleIntent()");
+		global_app = (SupervisorApplication) getApplication();
+		if( global_app.isNetworkOn() ) {
+			global_app.generateNotificationSync();
+			dataStorage = global_app.getDataStorage();
 
-	
-	public int onStartCommand(Intent intent, int flags, int startId) {
-		super.onStartCommand(intent, flags, startId);
-		if(thread.isAlive()) { //forced synchronisation
-			thread.interrupt();
-			thread = new SynchronisationThread();
-		} 
-			thread.start();
-		Log.d(TAG, "SERVICE STARTED : onStartCommand() called");
-		return START_STICKY;
-	}
-	
-
-	private class SynchronisationThread extends Thread {
-		
-		final String TAG = SynchronisationThread.class.getSimpleName();
-		SupervisorApplication global_app = (SupervisorApplication) getApplication();
-		public void run() {
-			
-			try{
-				while(true){
-					Long sync_delay = null;
-					int sync_option = Integer.parseInt(global_app.getSyncPeriod());
-					
-					switch (sync_option) {
-						case 0:
-							sync_delay = new Long(300000);
-							break;
-						case 1:
-							sync_delay = new Long(600000);
-							break;
-						case 2:
-							sync_delay = new Long(900000);
-							break;
-						case 3:
-							sync_delay = new Long(1800000);
-							break;
-						case 4:
-							sync_delay = new Long(3600000);
-							break;
-						case 6:
-							sync_delay = new Long(10000);
-							break;
-					}
-					if( global_app.isNetworkOn() ) {
-						Log.d(TAG, "Network on!");
-						isRequestOk = true;
-						status_text = getString(R.string.sync_status_bar_txt);
-						text = getString(R.string.sync_notification_body);
-						title = getString(R.string.sync_notification_title);
-						ApiManager.setCredentials(global_app.getUsername(), global_app.getPassword());
-						String adress = global_app.getServerURL();
-						try {
-							new URL(adress);
-						} catch (MalformedURLException e) {
-							Log.d(TAG, adress);
-							Log.d(TAG, e.getMessage());
-						}
-						ApiManager.HOST = adress;
-						int icon = R.drawable.ic_menu_refresh;
-						
-						ArrayList<Task> tasks = null;
-						Intent intent = null;
-							
-						try {
-							try {
-								if(global_app.getDataStorage().isEmpty()) 
-									tasks = ApiManager.getNTasks(100);
-								else 
-									tasks = ApiManager.getTasksSinceLastSync();
-							} catch (IllegalArgumentException e) {
-								throw new NetworkErrorException(e.getMessage());
-							}
-								
-						} catch (NetworkErrorException e) {					
-							intent = new Intent(SynchronisationService.this, PreferencesActivity.class);
-							status_text = getString(R.string.sync_status_bar_txt_error);
-							if (e.getMessage().equals("401")) 
-								text = getString(R.string.sync_notification_body_err);
-							else 
-								text = getString(R.string.sync_notification_body_ser_err);
-							isRequestOk = false;
-						}
-						
-						int count = global_app.insertTaskUpdates(tasks);
-						if (count != 0) 
-							SynchronisationService.this.sendBroadcast(new Intent(SupervisorApplication.UPDATE_VIEW_INTENT));
-						global_app.generateNotification(new String[]{status_text, title, text}, icon, 2000, !isRequestOk, intent);
-							
-					}
-					try {
-						sleep(sync_delay);
-					} catch (NullPointerException e) {
-						Log.d(TAG, e.getMessage());
-					}
-				}
-			} catch (InterruptedException e) {
-				Log.d(TAG, "interrupted exception");
+			ApiManager.setCredentials(global_app.getUsername(), global_app.getPassword());
+			String adress = global_app.getServerURL();
+			try {
+				new URL(adress);
+			} catch (MalformedURLException e) {
+				Log.d(TAG, adress + " : ");
+				Log.d(TAG, e.getMessage() + " : ");
 			}
+			ApiManager.HOST = adress;
+				
+			ArrayList<Task> tasks = null;
+				
+			try {
+				try {
+					Cursor cursor;
+					if(global_app.getDataStorage().isEmpty()) 
+						tasks = ApiManager.getNTasks(100);
+					else {
+						cursor = dataStorage.getNonSyncedTasks();
+						if (ApiManager.changeTasksStates(cursor)) {
+							dataStorage.clearNonSyncedTasks();
+							Log.d(TAG, "clearNonSyncedTasks called");
+						}
+						cursor.close();
+						tasks = ApiManager.getTasksSinceLastSync();
+					}
+					cursor = dataStorage.getNonSyncedWorkTimes();
+					if (ApiManager.changeWorkTimes(cursor))
+						dataStorage.clearNonSyncedWorkTimes();
+					cursor.close();
+					global_app.setLastSyncTimeToNow(true);
+				} catch (IllegalArgumentException e) {
+					Log.d(TAG, e.getMessage() + " illegal arg");
+					throw new NetworkErrorException(e.getMessage());
+				}
+						
+			} catch (NetworkErrorException e) {	
+				Log.d(TAG, e.getMessage());
+				if (e.getMessage().equals("401")) 
+					global_app.generateNotificationError401();
+				else
+					global_app.generateNotificationError404();
+				global_app.setLastSyncTimeToNow(false);
+			} finally {
+				global_app.cancelSyncNotification();
+			}
+			int count = global_app.insertTaskUpdates(tasks);
+			
+			if (count != 0) {
+				SynchronisationService.this.sendBroadcast(new Intent(SupervisorApplication.UPDATE_VIEW_INTENT));
+				global_app.generateNotificationChanges(count);
+			}	
 		}
-		
+		WakeLocker.release();
 	}
+	//
+	//change_work_times/ -- lokalnie na emulatorze dziala, na zdalnym serwerze jest 500 (unicode cos nei tak!?)
 
 }

@@ -1,8 +1,10 @@
 package org.supervisor;
 
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+
 
 import android.util.Log;
 
@@ -14,9 +16,8 @@ public class BootReceiver extends BroadcastReceiver {
 		
 			Log.d("bootreceiver", "phone booted - boot signal");
 			SupervisorApplication global_app = (SupervisorApplication) context.getApplicationContext();
-			if(!global_app.getSyncPeriod().equals("5")) {
-				context.startService(new Intent(context, SynchronisationService.class));
-				Log.d("bootreceiver", "started service");
-			}
+			global_app.reloadAlarm();
 	}
+	
+	
 }

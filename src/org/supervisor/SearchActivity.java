@@ -7,9 +7,11 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -21,6 +23,7 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 
 
 public class SearchActivity extends BaseActivity {
@@ -54,6 +57,18 @@ public class SearchActivity extends BaseActivity {
 		spinner = (Spinner) findViewById(R.id.category);
 		
 		searchText = (EditText) findViewById(R.id.searchText);
+		searchText.setOnEditorActionListener(new OnEditorActionListener() {
+			
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+				Log.d(TAG, "onEditorAction()");
+				if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN)
+				{
+							Log.d(TAG, "insideAction");
+					      loadSearchResults();
+					   }
+					   return true;
+			}
+		});
 		searchResults = (ListView) findViewById(R.id.tasklist);
 		searchResults.setOnItemClickListener(new OnItemClickListener() {
 			

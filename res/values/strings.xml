@@ -29,6 +29,7 @@
     <string name="sync_status_bar_txt_error">Supervisor: Wystąpił błąd</string>
     <string name="sync_notification_body_err">Nieprawidłowe dane użytkownika</string>
     <string name="sync_notification_body_ser_err">Nie odnaleziono serwera</string>
+    <string name="sync_notification_changes">Zmieniono: </string>
     <string name="dialog_text_no_network">Brak połączenia z Internetem</string>
     <string name="no_config">Witamy. Wprowadź ustawienia połączenia.</string>
     <string name="subtitle_active_task">Aktywne zadanie</string>
@@ -37,4 +38,5 @@
     <string name="subtitle_time">Czas pracy</string>
     <string name="menu_task_done">Oznacz jako zakończone</string>
     <string name="menu_task_current">Rozpocznij to zadanie</string>
+    <string name="main_screen_map">Mapa</string>
 </resources>

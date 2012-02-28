@@ -21,9 +21,9 @@
     </string-array>
     
     <string-array name="spinner_entries">
-    	<item>"Szukaj we: Wszystkie"</item>
-        <item>"Szukaj we: Archiwum"</item>
-        <item>"Szukaj we: Lista zadań"</item>
+    	<item>"Szukaj w: Wszystkie"</item>
+        <item>"Szukaj w: Archiwum"</item>
+        <item>"Szukaj w: Lista zadań"</item>
     </string-array>
     
 </resources>
