@@ -13,8 +13,6 @@
 			    android:background="@drawable/gradient_title"
 				android:layout_height="wrap_content"
 			    android:gravity="center"
-			    android:textStyle="bold"
-			    android:textColor="@color/black"
 			    android:minHeight="40dp"
 			/>
 			<View

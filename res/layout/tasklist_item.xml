@@ -6,30 +6,32 @@
 	android:layout_height="wrap_content">
 
 	<ImageView 
+	    android:contentDescription="@string/main_screen_map"
 		android:id="@+id/listitem_icon"
+		android:layout_margin="20dp"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"	
-		android:layout_alignParentTop="true"
-		android:layout_alignParentBottom="true"
-		android:layout_marginRight="5dp"
+		android:layout_alignParentLeft="true"
+		android:layout_centerVertical="true"
 		/>
-	<TextView 
-		android:id="@+id/firstline"
-		android:layout_height="wrap_content"
-		android:layout_width="fill_parent"
+	<LinearLayout 
+	    android:orientation="vertical"
+	    android:layout_height="wrap_content"
+	    android:layout_width="wrap_content"
 		android:layout_toRightOf="@id/listitem_icon"
-		android:layout_alignParentRight="true"
-		android:layout_alignParentTop="true"  
-		android:textColor="#010101"
-		android:textStyle="bold" />
-
-	<TextView 
-		android:id="@+id/secondline"
-		android:layout_height="wrap_content"
-		android:layout_width="fill_parent"
-		android:layout_toRightOf="@id/listitem_icon"
-		android:layout_alignParentRight="true"
-		android:layout_alignParentBottom="true"
-		android:textColor="@color/gray"/>
+		android:layout_centerVertical="true"
+		 >
+		<TextView 
+			android:id="@+id/firstline"
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent"	
+			android:textColor="#010101"
+			android:textStyle="bold" />
 	
+		<TextView 
+			android:id="@+id/secondline"
+			android:layout_height="wrap_content"
+			android:layout_width="fill_parent"
+			android:textColor="@color/gray"/>
+	</LinearLayout>
 </RelativeLayout>

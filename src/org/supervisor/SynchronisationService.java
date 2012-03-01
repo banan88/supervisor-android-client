@@ -72,8 +72,10 @@ public class SynchronisationService extends IntentService {
 				Log.d(TAG, e.getMessage());
 				if (e.getMessage().equals("401")) 
 					global_app.generateNotificationError401();
-				else
+				else if (e.getMessage().equals("404"))
 					global_app.generateNotificationError404();
+				else
+					global_app.generateNotificationError500();
 				global_app.setLastSyncTimeToNow(false);
 			} finally {
 				global_app.cancelSyncNotification();

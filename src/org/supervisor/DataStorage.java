@@ -8,6 +8,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
+import android.text.format.Time;
 import android.util.Log;
 
 public class DataStorage {
@@ -84,14 +85,6 @@ public class DataStorage {
 	}
 	
 	
-	public void repopulateFTS() {
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		String sql = "insert into " + FTS_TABLE + " select " + C_ID + ", " + C_STATE + ", " + C_DESC + ", " + 
-			C_NAME + ", " + C_LAST_MODIFIED + ", " + C_SUPERVISOR + " from " + TASK_TABLE +";";
-		db.execSQL(sql);
-	}
-	
-	
 	public boolean isEmpty() {
 		String sql = "SELECT Count(" + C_ID + ") from " + TASK_TABLE + ";";
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -110,7 +103,6 @@ public class DataStorage {
 	public DataStorage(Context context) {
 		dbHelper = new DBHelper(context);
 		Log.d(TAG, "DataStorage initialized");
-		repopulateFTS();
 	}
 	
 	
@@ -171,12 +163,12 @@ public class DataStorage {
 				Log.d(TAG, "move to first true");
 				String finish_time, start_time;
 				try {
-					finish_time = c.getString(7);
+					finish_time = c.getString(8);
 				} catch (SQLException e) {
 					finish_time = null;
 				}
 				try {
-					start_time = c.getString(8);
+					start_time = c.getString(9);
 				} catch (SQLException e) {
 					start_time = null;
 				}
@@ -194,8 +186,9 @@ public class DataStorage {
 						start_time,
 						Integer.parseInt(c.getString(10)),
 						c.getString(11),
-						c.getString(12)
+						c.getString(13)
 					);
+				Log.d(TAG, c.getString(13));
 				c.close();
 				return task;
 			}
@@ -217,12 +210,12 @@ public class DataStorage {
 			if(c.moveToFirst()) {
 				String finish_time, start_time;
 				try {
-					finish_time = c.getString(7);
+					finish_time = c.getString(8);
 				} catch (SQLException e) {
 					finish_time = null;
 				}
 				try {
-					start_time = c.getString(8);
+					start_time = c.getString(9);
 				} catch (SQLException e) {
 					start_time = null;
 				}
@@ -240,8 +233,9 @@ public class DataStorage {
 						start_time,
 						Integer.parseInt(c.getString(10)),
 						c.getString(11),
-						c.getString(12)
+						c.getString(13)
 					);
+				Log.d(TAG, c.getString(13));
 				c.close();
 				return task;
 			}
@@ -282,7 +276,7 @@ public class DataStorage {
 		Log.d("DATASTORAGE START TIME: " , Long.toString(dateMillis));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = 2, " + C_START_TIME + " = " + dateMillis + 
-			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
+			", "+ C_LAST_MODIFIED + " = " + dateMillis + ", " + C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
 		sql = "UPDATE " + FTS_TABLE + " SET " + C_STATE + " = 2 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
@@ -293,7 +287,7 @@ public class DataStorage {
 		Log.d("DATASTORAGE FINISH TIME: " , Long.toString(dateMillis));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = 3, " + C_FINISH_TIME + " = " + dateMillis + 
-			", "+ C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
+			", "+ C_LAST_MODIFIED + " = " + dateMillis + ", " + C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
 		sql = "UPDATE " + FTS_TABLE + " SET " + C_STATE + " = 3 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
@@ -307,7 +301,9 @@ public class DataStorage {
 	
 	public void clearNonSyncedTasks() {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		String sql = "UPDATE " + TASK_TABLE + " SET " + C_PENDING_SYNC + " = 0;";
+		Time t = new Time();
+		t.setToNow();
+		String sql = "UPDATE " + TASK_TABLE + " SET " + C_PENDING_SYNC + " = 0, " + C_LAST_SYNC + " = " + t.toMillis(true) + ";";
 		db.execSQL(sql);
 	}
 	

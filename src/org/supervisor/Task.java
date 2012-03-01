@@ -1,5 +1,7 @@
 package org.supervisor;
 
+import android.util.Log;
+
 public class Task {
 	
 	private long id;
@@ -18,6 +20,7 @@ public class Task {
 	
 	public Task(long a0, String a1, String a2, double a3, double a4, int a5,
 			String a6, String a7, String a8, String a9, int a10, String a11, String a12){
+		
 		id = a0;
 		name = a1;
 		description = a2;
@@ -31,6 +34,7 @@ public class Task {
 		version = a10;
 		lastSynced = a11;
 		supervisor = a12;
+		Log.d("TASK", startTime);
 	}
 
 	public long getId() {
@@ -70,10 +74,12 @@ public class Task {
 	}
 
 	public String getFinishTime() {
+		
 		return finishTime;
 	}
 
 	public String getStartTime() {
+		Log.d("TASK return", startTime);
 		return startTime;
 	}
 

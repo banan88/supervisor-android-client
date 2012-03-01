@@ -28,6 +28,7 @@ public class SupervisorApplication extends Application {
 	public static final String UPDATE_VIEW_INTENT = "org.supervisor.UPDATE_VIEW";
 	public static final int CREDENTIALS_ERR = 401;
 	public static final int SERVER_ERR = 404;
+	public static final int SERVER_ERR_500 = 500;
 	public static final int SYNC_START = 0;
 	public static final int SYNC_COUNT = 200;
 	
@@ -213,6 +214,18 @@ public class SupervisorApplication extends Application {
 	}
 	
 	
+	public void generateNotificationError500() {
+		Notification not = new Notification(R.drawable.ic_menu_refresh, 
+				getString(R.string.sync_notification_body_ser_err_500),
+				System.currentTimeMillis());
+		not.flags |= Notification.FLAG_AUTO_CANCEL; 
+		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, PreferencesActivity.class), 0);
+		not.setLatestEventInfo(this, getString(R.string.sync_notification_title), 
+				getString(R.string.sync_notification_body_ser_err_500), pi);
+		mgr.notify(SERVER_ERR_500, not);
+	}
+	
+	
 	public synchronized int insertTaskUpdates(ArrayList<Task> tasks) {
 		
 		if(tasks == null || tasks.size() == 0)
@@ -233,9 +246,9 @@ public class SupervisorApplication extends Application {
 			values.put(DataStorage.C_START_TIME, task.getStartTime());
 			values.put(DataStorage.C_VERSION, task.getVersion());
 			values.put(DataStorage.C_LAST_SYNC, task.getLastSynced());
+			values.put(DataStorage.C_SUPERVISOR, task.getSupervisor());
 			dataStorage.insert(values);		
 		}
-		dataStorage.repopulateFTS(); //this is a hack - should maintain fts state between updates
 		dataStorage.close();
 		return tasks.size();
 	}		

@@ -3,7 +3,7 @@
     <string name="app_name">Supervisor</string>
     <string name="search_hint">Szukaj</string>
     <string name="synchronise_title">synchronizuj</string>
-    <string name="dialog_text">Rozpoczęto synchronizację...</string>
+    <string name="dialog_text">Rozpoczęto synchronizację…</string>
     <string name="permission_description">Aktualizowanie stanu zadań</string>
     <string name="permission_label">Aktualizacje zadań</string>
     
@@ -23,12 +23,13 @@
     <string name="password_pref_key">password</string>
     <string name="server_pref_key">server</string>
     <string name="sync_pref_key">sync</string>
-    <string name="sync_status_bar_txt">Synchronizacja...</string>
+    <string name="sync_status_bar_txt">Synchronizacja…</string>
     <string name="sync_notification_title">Supervisor</string>
-    <string name="sync_notification_body">Synchronizuję...</string>
+    <string name="sync_notification_body">Synchronizuję…</string>
     <string name="sync_status_bar_txt_error">Supervisor: Wystąpił błąd</string>
     <string name="sync_notification_body_err">Nieprawidłowe dane użytkownika</string>
     <string name="sync_notification_body_ser_err">Nie odnaleziono serwera</string>
+    <string name="sync_notification_body_ser_err_500">Wystąpił błąd serwera</string>
     <string name="sync_notification_changes">Zmieniono: </string>
     <string name="dialog_text_no_network">Brak połączenia z Internetem</string>
     <string name="no_config">Witamy. Wprowadź ustawienia połączenia.</string>
@@ -39,4 +40,7 @@
     <string name="menu_task_done">Oznacz jako zakończone</string>
     <string name="menu_task_current">Rozpocznij to zadanie</string>
     <string name="main_screen_map">Mapa</string>
+    <string name="task_details">Wyświetl szczegóły</string>
+    <string name="task_details_title">Szczegóły</string>
+    <string name="hint">Szukaj</string>
 </resources>

@@ -1,15 +1,18 @@
 package org.supervisor;
 
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -20,12 +23,8 @@ public class SingleTaskActivity extends BaseActivity {
 	
 	private Button logo;
 	private Button searchButton;
-	private Button map;
 	private TextView name;
-	private TextView syncTime;
-	private TextView desc;
-	private TextView added;
-	private TextView localisation;
+	private Button location;
 	private DataStorage dataStorage;
 	private Task task;
 	private TaskUpdateReceiver receiver;
@@ -33,17 +32,23 @@ public class SingleTaskActivity extends BaseActivity {
 	private Long getTaskById;
 	private int taskState;
 	private LinearLayout inner;
+	private Button details;
+	private Dialog dialog;
+	private TextView desc;
+	
 	
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.layout_task);
 		dataStorage = global_app.getDataStorage();
+		searchButton = (Button) findViewById(R.id.search);
+		searchButton.setOnClickListener(this);
+		logo = (Button) findViewById(R.id.logo);
+		logo.setOnClickListener(this);
 		name = (TextView) findViewById(R.id.category);
-		syncTime = (TextView) findViewById(R.id.task_sync_time);
-		localisation = (TextView) findViewById(R.id.task_localisation);
-		desc = (TextView) findViewById(R.id.task_desc);
-		added = (TextView) findViewById(R.id.task_added);
+		location = (Button) findViewById(R.id.location);
+		details = (Button) findViewById(R.id.details);
 		receiver = new TaskUpdateReceiver();
 		filter = new IntentFilter(SupervisorApplication.UPDATE_VIEW_INTENT);
 		try {
@@ -51,12 +56,6 @@ public class SingleTaskActivity extends BaseActivity {
 		} catch (NullPointerException e) {
 			getTaskById = new Long(0);
 		}
-		searchButton = (Button) findViewById(R.id.search);
-		searchButton.setOnClickListener(this);
-		map = (Button) findViewById(R.id.map_icon);
-		map.setOnClickListener(this);
-		logo = (Button) findViewById(R.id.logo);
-		logo.setOnClickListener(this);
 		inner = (LinearLayout) findViewById(R.id.inner);
 	}
 	
@@ -82,10 +81,55 @@ public class SingleTaskActivity extends BaseActivity {
        				break;
        		}
 	       	name.setText(task.getName() + defaultCancelled + ")");
-	       	syncTime.setText(task.getCreationTime());
-	       	localisation.setText(task.getLatitude() + " " + task.getLongitude());
+	       	location.setText("Pokaż na mapie: " + task.getLatitude() + " N " + task.getLongitude() + " S ");
+	       	location.setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					startActivity(new Intent(SingleTaskActivity.this, DefaultMapActivity.class));
+				}
+			});
+	       	Log.d("single task", task.getSupervisor());
+	       	desc = (TextView) findViewById(R.id.desc);
 	       	desc.setText(task.getDescription());
-	       	added.setText(task.getSupervisor());
+	       	Log.d("single", task.getDescription());
+	       	details.setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					 dialog = new Dialog(SingleTaskActivity.this);
+		             dialog.setContentView(R.layout.task_details);
+		             dialog.setCancelable(true);
+		             dialog.setTitle(getString(R.string.task_details_title));
+		             TextView text = (TextView) dialog.findViewById(R.id.created_by);
+		             text.setText("utworzone przez: " + task.getSupervisor());
+		             text = (TextView) dialog.findViewById(R.id.created_by_time);
+		             text.setText("czas utworzenia: " + 
+		            		 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getCreationTime())));
+		             text = (TextView) dialog.findViewById(R.id.last_modified);
+		             text.setText("ostatnio zmodyfikowane: " + 
+		            		 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getLastModified())));
+		             if(Long.parseLong(task.getLastSynced()) > 0) {
+		            	 text = (TextView) dialog.findViewById(R.id.sync_state);
+		            	 text.setText("ostatnio zsynchronizowane: " +
+		            			 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getLastSynced())));
+		             }
+		             if(Long.parseLong(task.getStartTime())>0) {
+		            	 text = (TextView) dialog.findViewById(R.id.start);
+		            	 text.setText("czas rozpoczęcia: " +
+		            			 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getStartTime())));
+		             }
+		             if(Long.parseLong(task.getFinishTime())>0) {
+		            	 Log.d("single", task.getFinishTime());
+		            	 text = (TextView) dialog.findViewById(R.id.finish);
+		            	 text.setText("czas zakończenia: " +
+		            			 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getFinishTime())));
+		             }
+		            	 
+		             dialog.setCanceledOnTouchOutside(true);
+		             dialog.show();
+		            }
+		        });
 	       	taskState = task.getState();
        	}
        	else {
@@ -108,16 +152,13 @@ public class SingleTaskActivity extends BaseActivity {
     protected void onPause() {
     	super.onPause();
     	unregisterReceiver(receiver);
+    	if(dialog!=null)
+    		dialog.cancel();
     }
     
     
     public void onClick(View v) {
     	super.onClick(v);
-		switch(v.getId()) {
-			case R.id.map_icon:
-				//to do: start mapActivity
-				break;
-		}
 	}
     
     
