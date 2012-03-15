@@ -1,12 +1,14 @@
 package org.supervisor;
 
+import java.text.DateFormat;
+import java.util.Date;
+
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.Menu;
@@ -105,25 +107,30 @@ public class SingleTaskActivity extends BaseActivity {
 		             text.setText("utworzone przez: " + task.getSupervisor());
 		             text = (TextView) dialog.findViewById(R.id.created_by_time);
 		             text.setText("czas utworzenia: " + 
-		            		 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getCreationTime())));
+		            		 DateFormat.getDateTimeInstance().format(
+		            				 new Date(Long.parseLong(task.getCreationTime()))));
 		             text = (TextView) dialog.findViewById(R.id.last_modified);
-		             text.setText("ostatnio zmodyfikowane: " + 
-		            		 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getLastModified())));
+		             text.setText("ostatnio zmodyfikowane: \n" + 
+		            		 DateFormat.getDateTimeInstance().format(
+		            				 Long.parseLong(task.getLastModified())));
 		             if(Long.parseLong(task.getLastSynced()) > 0) {
 		            	 text = (TextView) dialog.findViewById(R.id.sync_state);
-		            	 text.setText("ostatnio zsynchronizowane: " +
-		            			 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getLastSynced())));
+		            	 text.setText("ostatnio zsynchronizowane: \n" +
+		            			 DateFormat.getDateTimeInstance().format(
+		            					 Long.parseLong(task.getLastSynced())));
 		             }
 		             if(Long.parseLong(task.getStartTime())>0) {
 		            	 text = (TextView) dialog.findViewById(R.id.start);
 		            	 text.setText("czas rozpoczęcia: " +
-		            			 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getStartTime())));
+		            			 DateFormat.getDateTimeInstance().format(
+		            					 Long.parseLong(task.getStartTime())));
 		             }
 		             if(Long.parseLong(task.getFinishTime())>0) {
 		            	 Log.d("single", task.getFinishTime());
 		            	 text = (TextView) dialog.findViewById(R.id.finish);
 		            	 text.setText("czas zakończenia: " +
-		            			 DateUtils.getRelativeTimeSpanString(Long.parseLong(task.getFinishTime())));
+		            			 DateFormat.getDateTimeInstance().format(
+		            					 Long.parseLong(task.getFinishTime())));
 		             }
 		            	 
 		             dialog.setCanceledOnTouchOutside(true);

@@ -36,12 +36,7 @@ public class TasksActivity extends BaseActivity{
 	private static final String []FROM = {DataStorage.C_NAME, DataStorage.C_LAST_MODIFIED};
 	private static final int []TO = {R.id.firstline, R.id.secondline};
 	private boolean archiveView;
-
-   	static class ViewHolder {
-        public ImageView imageView;
-        public TextView textView1;
-        public TextView textView2;
-    }
+   	
 	
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState); 
@@ -111,50 +106,60 @@ public class TasksActivity extends BaseActivity{
     
     class TasksAdapter extends SimpleCursorAdapter {
     	
+    	 LayoutInflater inflater =  (LayoutInflater) TasksActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    	
     	public TasksAdapter() {
 			super(TasksActivity.this, R.layout.tasklist_item, cursor, FROM, TO);
 		}
     	
     	public View getView(int position, View convertView, ViewGroup parent) {
-    		cursor.moveToNext();
-            View rowView = convertView;
-            ViewHolder holder;
-            if (rowView == null) {
-                LayoutInflater inflater =  (LayoutInflater) TasksActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                rowView = inflater.inflate(R.layout.tasklist_item,null,true);
-                holder = new ViewHolder();
-                holder.textView1 = (TextView) rowView.findViewById(R.id.firstline);
-                holder.textView2 = (TextView) rowView.findViewById(R.id.secondline);
-                holder.imageView = (ImageView) rowView.findViewById(R.id.listitem_icon);
-                rowView.setTag(holder);
-            }else{
-                holder = (ViewHolder) rowView.getTag();
-            }
-            
-            int state = cursor.getInt(cursor.getColumnIndex(DataStorage.C_STATE));
-            switch(state) {
-            	case 3:
-            		holder.imageView.setImageResource(R.drawable.done);
-            		break;
-            	case 2:
-            		holder.imageView.setImageResource(R.drawable.current);
-            		break;
-            	case 1:
-            		holder.imageView.setImageResource(R.drawable.clock);
-            		break;
-            	case 0:
-            		holder.imageView.setImageResource(R.drawable.cancel);
-            		break;
-            }
-            
-            String s = cursor.getString(cursor.getColumnIndex(DataStorage.C_NAME));
+    		cursor.moveToPosition(position);
+    		ViewHolder holder;
+    		if(convertView == null) {
+    			convertView = inflater.inflate(R.layout.tasklist_item,null,true);
+    			holder = new ViewHolder();
+    			holder.textView1 = (TextView) convertView.findViewById(R.id.firstline);
+    			holder.textView2 = (TextView) convertView.findViewById(R.id.secondline);
+    			
+                holder.imageView = (ImageView) convertView.findViewById(R.id.listitem_icon);
+                int state = cursor.getInt(cursor.getColumnIndex(DataStorage.C_STATE));
+                Log.d(TAG, Integer.toString(state));
+                switch(state) {
+                	case 3:
+                		holder.imageView.setImageResource(R.drawable.done);
+                		break;
+                	case 2:
+                		holder.imageView.setImageResource(R.drawable.current);
+                		break;
+                	case 1:
+                		holder.imageView.setImageResource(R.drawable.clock);
+                		break;
+                	case 0:
+                		holder.imageView.setImageResource(R.drawable.cancel);
+                		break;
+                }
+                
+                convertView.setTag(holder);
+    		}
+    		else {
+    			holder = (ViewHolder) convertView.getTag();
+    		}
+    		
+    		String s = cursor.getString(cursor.getColumnIndex(DataStorage.C_NAME));
             holder.textView1.setText(s);
+            Log.d(TAG, Long.toString((cursor.getLong(cursor.getColumnIndex(DataStorage.C_LAST_MODIFIED)))) + " tu");
             s = "zmodyfikowane: " + DateUtils.getRelativeTimeSpanString(
             		cursor.getLong(cursor.getColumnIndex(DataStorage.C_LAST_MODIFIED))).toString();
             holder.textView2.setText(s);
-
-            return rowView;
+      
+            return convertView;
         } 
+    }
+    
+   	static class ViewHolder {
+        public ImageView imageView;
+        public TextView textView1;
+        public TextView textView2;
     }
     
     

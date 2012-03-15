@@ -2,6 +2,7 @@ package org.supervisor;
 
 import java.util.ArrayList;
 
+
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
@@ -12,8 +13,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.text.format.Time;
@@ -31,6 +37,7 @@ public class SupervisorApplication extends Application {
 	public static final int SERVER_ERR_500 = 500;
 	public static final int SYNC_START = 0;
 	public static final int SYNC_COUNT = 200;
+	private GeoLocation geoLocation;
 	
 	
 	public void onCreate() {
@@ -138,6 +145,15 @@ public class SupervisorApplication extends Application {
 		preferenceEditor.commit();
 	}
 	
+	public boolean wasPromptedForGPSEnabling() {
+		return prefs.getBoolean("GPS_PROMPT", false);
+	}
+	
+	public void setAlreadyPromptedForGPSEnabling() {
+		Editor preferenceEditor = prefs.edit();
+		preferenceEditor.putBoolean("GPS_PROMPT", true);
+		preferenceEditor.commit();
+	}
 	
 	public Long getLastSyncTime() {
 		return prefs.getLong("DATETIME", 0);
@@ -183,7 +199,7 @@ public class SupervisorApplication extends Application {
 				System.currentTimeMillis());
 		not.flags |= Notification.FLAG_AUTO_CANCEL;
 		not.flags |= Notification.DEFAULT_SOUND;
-		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, MainScreenActivity.class), 0);
+		PendingIntent pi = PendingIntent.getActivity(this, 0, new Intent(this, TasksActivity.class), 0);
 		not.setLatestEventInfo(this, getString(R.string.sync_notification_title), 
 				getString(R.string.sync_notification_changes) + " " + Integer.toString(count) , pi);
 		mgr.notify(SYNC_START, not);
@@ -252,5 +268,47 @@ public class SupervisorApplication extends Application {
 		dataStorage.close();
 		return tasks.size();
 	}		
+	
+	
+	public boolean checkGPS() {
+		LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
+		return service.isProviderEnabled(LocationManager.GPS_PROVIDER);
+	}
+	
+	
+	public Location getLastLocation() {
+		if(geoLocation==null)
+			geoLocation = new GeoLocation();
+		return geoLocation.lastLocation;
+	}
+	
+	
+	class GeoLocation{
+		
+		private LocationManager locationManager;
+		private String provider;
+		private Location lastLocation;
+		
+		public GeoLocation() {
+			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 180000, //3min 30meters
+					300, new LocationListener() {
+						
+						public void onStatusChanged(String provider, int status, Bundle extras) {}
+						
+						public void onProviderEnabled(String provider) {}
+					
+						public void onProviderDisabled(String provider) {}
+						
+						public void onLocationChanged(Location location) {
+							lastLocation = location;							
+						}
+					});
+			Criteria criteria = new Criteria();
+			provider = locationManager.getBestProvider(criteria, true);
+			lastLocation = locationManager.getLastKnownLocation(provider);
+		}
+	}
+	
 }
 

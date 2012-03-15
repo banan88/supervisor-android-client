@@ -43,4 +43,8 @@
     <string name="task_details">Wyświetl szczegóły</string>
     <string name="task_details_title">Szczegóły</string>
     <string name="hint">Szukaj</string>
+    <string name="gps_info">Czy chcesz włączyć GPS? 
+        Twoja pozycja będzie dokładniejsza kosztem większego zużycia energii. 
+        Możesz zmienić to później w: 
+        Ustawienia > Lokalizacja i zabezpieczenia > Użyj satelitów GPS</string>
 </resources>

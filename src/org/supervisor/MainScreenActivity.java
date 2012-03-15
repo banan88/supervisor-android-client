@@ -1,7 +1,10 @@
 package org.supervisor;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.format.DateUtils;
 import android.view.View;
 import android.view.animation.AnimationUtils;
@@ -22,6 +25,8 @@ public class MainScreenActivity extends BaseActivity {
 	private Button syncImage;
 	private Button settings;
 	private Button map;
+	private DialogInterface.OnClickListener dialogClickListener;
+	private AlertDialog dialog;
 	
 	
 	 public void onCreate(Bundle savedInstanceState) {
@@ -52,6 +57,22 @@ public class MainScreenActivity extends BaseActivity {
 		 settings.setOnClickListener(this);
 		 map = (Button) findViewById(R.id.map);
 		 map.setOnClickListener(this);
+		 
+		 dialogClickListener = new DialogInterface.OnClickListener() {
+			    @Override
+			    public void onClick(DialogInterface dialog, int which) {
+			        switch (which){
+			        case DialogInterface.BUTTON_POSITIVE:
+			        	Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+			        	startActivity(settingsIntent);
+			            break;
+
+			        case DialogInterface.BUTTON_NEGATIVE:
+						startActivity(new Intent(MainScreenActivity.this, DefaultMapActivity.class));
+			            break;
+			        }
+			    }
+			};
 	 }
 	 
 	 
@@ -115,7 +136,20 @@ public class MainScreenActivity extends BaseActivity {
 				startActivity(new Intent(this, PreferencesActivity.class));
 				break;
 			case R.id.map:
-				startActivity(new Intent(this, DefaultMapActivity.class));
+				if (!global_app.checkGPS() && !global_app.wasPromptedForGPSEnabling()) {
+					AlertDialog.Builder builder = new AlertDialog.Builder(this);
+					builder.setMessage(R.string.gps_info).setPositiveButton("Tak", dialogClickListener)
+					    .setNegativeButton("Nie", dialogClickListener);		
+					global_app.setAlreadyPromptedForGPSEnabling();
+					dialog = builder.show();
+				}else
+					startActivity(new Intent(this, DefaultMapActivity.class));
 			}
 		}
+	 
+	 protected void onPause() {
+	    	super.onPause();
+	    	if(dialog!=null)
+	    		dialog.dismiss();
+	    }
 }
