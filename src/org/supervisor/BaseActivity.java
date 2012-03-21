@@ -79,9 +79,8 @@ public class BaseActivity extends Activity implements OnClickListener{
 	
 	
 	public boolean onSearchRequested() {
-		Intent intent = new Intent(this, SearchActivity.class);
-		intent.setAction(Intent.ACTION_SEARCH);
-		startActivity(intent);
+		if(!(this instanceof SearchActivity))
+			startActivity(new Intent(this, SearchActivity.class));
 		return false;
 	}
 

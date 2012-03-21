@@ -11,10 +11,13 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -99,6 +102,9 @@ public class SingleTaskActivity extends BaseActivity {
 				
 				@Override
 				public void onClick(View v) {
+					
+					Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+					int rotation = display.getRotation();
 					 dialog = new Dialog(SingleTaskActivity.this);
 		             dialog.setContentView(R.layout.task_details);
 		             dialog.setCancelable(true);
@@ -110,14 +116,27 @@ public class SingleTaskActivity extends BaseActivity {
 		            		 DateFormat.getDateTimeInstance().format(
 		            				 new Date(Long.parseLong(task.getCreationTime()))));
 		             text = (TextView) dialog.findViewById(R.id.last_modified);
-		             text.setText("ostatnio zmodyfikowane: \n" + 
-		            		 DateFormat.getDateTimeInstance().format(
-		            				 Long.parseLong(task.getLastModified())));
-		             if(Long.parseLong(task.getLastSynced()) > 0) {
-		            	 text = (TextView) dialog.findViewById(R.id.sync_state);
-		            	 text.setText("ostatnio zsynchronizowane: \n" +
+		             if(Surface.ROTATION_90 == rotation) {
+		            	 text.setText("ostatnio zmodyfikowane: " + 
 		            			 DateFormat.getDateTimeInstance().format(
-		            					 Long.parseLong(task.getLastSynced())));
+		            					 Long.parseLong(task.getLastModified())));
+			             if(Long.parseLong(task.getLastSynced()) > 0) {
+			            	 text = (TextView) dialog.findViewById(R.id.sync_state);
+			            	 text.setText("ostatnio zsynchronizowane: " +
+			            			 DateFormat.getDateTimeInstance().format(
+			            					 Long.parseLong(task.getLastSynced())));
+			             }
+		             }
+		             else {
+		            	 text.setText("ostatnio zmodyfikowane: \n" + 
+		            			 DateFormat.getDateTimeInstance().format(
+		            					 Long.parseLong(task.getLastModified())));
+			             if(Long.parseLong(task.getLastSynced()) > 0) {
+			            	 text = (TextView) dialog.findViewById(R.id.sync_state);
+			            	 text.setText("ostatnio zsynchronizowane: \n" +
+			            			 DateFormat.getDateTimeInstance().format(
+			            					 Long.parseLong(task.getLastSynced())));
+			             }
 		             }
 		             if(Long.parseLong(task.getStartTime())>0) {
 		            	 text = (TextView) dialog.findViewById(R.id.start);
@@ -141,9 +160,9 @@ public class SingleTaskActivity extends BaseActivity {
        	}
        	else {
        		if(getTaskById > 0) 
-       			name.setText("ZADANIE NIE ISTNIEJE");
+       			name.setText("Takie zadanie nie istnieje.");
        		else
-       			name.setText("NIE WYKONUJESZ ŻADNEGO ZADANIA");
+       			name.setText("Brak aktywnego zadania.");
        			inner.setVisibility(View.INVISIBLE);
        	}
     }

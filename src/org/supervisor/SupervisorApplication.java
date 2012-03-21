@@ -278,21 +278,22 @@ public class SupervisorApplication extends Application {
 	
 	public Location getLastLocation() {
 		if(geoLocation==null)
-			geoLocation = new GeoLocation();
+			geoLocation = new GeoLocation();	
 		return geoLocation.lastLocation;
 	}
 	
 	
-	class GeoLocation{
+	class GeoLocation {
 		
 		private LocationManager locationManager;
 		private String provider;
 		private Location lastLocation;
 		
 		public GeoLocation() {
+			Log.d(TAG, "GeoLocation constructor");
 			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 180000, //3min 30meters
-					300, new LocationListener() {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, //3min 30meters
+					0, new LocationListener() {
 						
 						public void onStatusChanged(String provider, int status, Bundle extras) {}
 						
@@ -301,13 +302,25 @@ public class SupervisorApplication extends Application {
 						public void onProviderDisabled(String provider) {}
 						
 						public void onLocationChanged(Location location) {
-							lastLocation = location;							
+							lastLocation = location;	
+							 int lat = (int) (location.getLatitude());
+								int lng = (int) (location.getLongitude());
+								Log.d("LocationChanged()", "lat: " + Long.toString(lat) + " lon: " + Long.toString(lng));
 						}
 					});
 			Criteria criteria = new Criteria();
 			provider = locationManager.getBestProvider(criteria, true);
+			Log.d(TAG, provider);
 			lastLocation = locationManager.getLastKnownLocation(provider);
+			if(lastLocation==null){ //fake location for emulator..
+				Log.d(TAG, "USED FAKE LOCATION WITH NETWORK PROVIDER");
+				Location l = new Location(LocationManager.NETWORK_PROVIDER);
+				l.setLatitude(21.666);
+				l.setLongitude(22.666);
+				lastLocation = l;
+			}
 		}
+
 	}
 	
 }

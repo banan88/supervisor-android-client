@@ -89,6 +89,7 @@ public class TasksActivity extends BaseActivity{
     	super.onResume();
     	registerReceiver(receiver, filter);
     	setUp();
+    	adapter.notifyDataSetChanged();
     }    
     
     
@@ -151,7 +152,7 @@ public class TasksActivity extends BaseActivity{
             s = "zmodyfikowane: " + DateUtils.getRelativeTimeSpanString(
             		cursor.getLong(cursor.getColumnIndex(DataStorage.C_LAST_MODIFIED))).toString();
             holder.textView2.setText(s);
-      
+            
             return convertView;
         } 
     }
