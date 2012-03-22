@@ -53,8 +53,10 @@ public class TasksActivity extends BaseActivity{
 		}
 		searchButton = (Button) findViewById(R.id.search);
 		searchButton.setOnClickListener(this);
+		searchButton.setOnTouchListener(this);
 		logo = (Button) findViewById(R.id.logo);
 		logo.setOnClickListener(this);
+		logo.setOnTouchListener(this);
 		
 		taskList.setOnItemClickListener(new OnItemClickListener() {
 			

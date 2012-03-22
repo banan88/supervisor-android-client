@@ -49,11 +49,15 @@ public class SingleTaskActivity extends BaseActivity {
 		dataStorage = global_app.getDataStorage();
 		searchButton = (Button) findViewById(R.id.search);
 		searchButton.setOnClickListener(this);
+		searchButton.setOnTouchListener(this);
 		logo = (Button) findViewById(R.id.logo);
 		logo.setOnClickListener(this);
+		logo.setOnTouchListener(this);
 		name = (TextView) findViewById(R.id.category);
 		location = (Button) findViewById(R.id.location);
+		location.setOnTouchListener(this);
 		details = (Button) findViewById(R.id.details);
+		details.setOnTouchListener(this);
 		receiver = new TaskUpdateReceiver();
 		filter = new IntentFilter(SupervisorApplication.UPDATE_VIEW_INTENT);
 		try {
@@ -85,13 +89,16 @@ public class SingleTaskActivity extends BaseActivity {
        				defaultCancelled = " (Oczekujące";
        				break;
        		}
+       		Log.d("task id", Long.toString(task.getId()));
 	       	name.setText(task.getName() + defaultCancelled + ")");
 	       	location.setText("Pokaż na mapie: " + task.getLatitude() + " N " + task.getLongitude() + " S ");
 	       	location.setOnClickListener(new OnClickListener() {
 				
 				@Override
 				public void onClick(View v) {
-					startActivity(new Intent(SingleTaskActivity.this, DefaultMapActivity.class));
+					Intent showOnMap = new Intent(SingleTaskActivity.this, DefaultMapActivity.class);
+					showOnMap.putExtra("taskId", task.getId());
+					startActivity(showOnMap);
 				}
 			});
 	       	Log.d("single task", task.getSupervisor());
@@ -191,7 +198,7 @@ public class SingleTaskActivity extends BaseActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
     	menu.removeItem(101);
     	menu.removeItem(102);
-    	if(taskState == 1)
+    	if(taskState == 1 && !dataStorage.isThereACurrentTask())
     		menu.add(Menu.NONE, 101, Menu.NONE, R.string.menu_task_current);
     	else if (taskState == 2)
     		menu.add(Menu.NONE, 102, Menu.NONE, R.string.menu_task_done);

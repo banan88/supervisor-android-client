@@ -26,4 +26,17 @@
         <item>"Szukaj w: Lista zadań"</item>
     </string-array>
     
+    <string-array name="spinner_state_entries">
+    	<item>"Wyświetlaj: Wszystkie" </item>
+        <item>"Wyświetlaj: Archiwum" </item>
+        <item>"Wyświetlaj: Lista zadań" </item>
+    </string-array>
+    
+    <string-array name="spinner_time_entries">
+        <item>" z dowolnego okresu</item>
+    	<item>" z dzisiaj"</item>
+        <item>" z 7 dni"</item>
+        <item>" starsze niż 7 dni"</item>
+    </string-array>
+    
 </resources>

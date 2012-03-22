@@ -9,6 +9,7 @@ import android.text.format.DateUtils;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,22 +42,31 @@ public class MainScreenActivity extends BaseActivity {
 	    
 		 activeTaskButton = (Button) findViewById(R.id.active);
 		 activeTaskButton.setOnClickListener(this);
+		 activeTaskButton.setOnTouchListener(this);
 		 taskListButton = (Button) findViewById(R.id.tasklist);
 		 taskListButton.setOnClickListener(this);
+		 taskListButton.setOnTouchListener(this);
 		 taskArchiveButton = (Button) findViewById(R.id.archive);
 		 taskArchiveButton.setOnClickListener(this);
+		 taskArchiveButton.setOnTouchListener(this);
 		 timeButton = (Button) findViewById(R.id.time);
 		 timeButton.setOnClickListener(this);
+		 timeButton.setOnTouchListener(this);
 		 syncText = (TextView) findViewById(R.id.sync_textbutton);
 		 syncText.setOnClickListener(this);
+		 syncText.setOnTouchListener(this);
 		 syncImage = (Button) findViewById(R.id.sync_button);
 		 syncImage.setOnClickListener(this);
 		 searchButton = (Button) findViewById(R.id.search);
 		 searchButton.setOnClickListener(this);
+		 searchButton.setOnTouchListener(this);
 		 settings = (Button) findViewById(R.id.settings);
 		 settings.setOnClickListener(this);
+		 settings.setOnTouchListener(this);
 		 map = (Button) findViewById(R.id.map);
 		 map.setOnClickListener(this);
+		 map.setOnTouchListener(this);
+		 
 		 
 		 dialogClickListener = new DialogInterface.OnClickListener() {
 			    @Override

@@ -1,24 +1,28 @@
 package org.supervisor;
 
+
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.Toast;
 
-public class BaseActivity extends Activity implements OnClickListener{
+public class BaseActivity extends Activity implements OnClickListener, OnTouchListener{
 	
 
 	private static final String TAG = BaseActivity.class.getSimpleName();
 	protected SupervisorApplication global_app;
 	protected DataStorage dataStorage;
-	
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -70,6 +74,7 @@ public class BaseActivity extends Activity implements OnClickListener{
 				startActivity(new Intent(this, MainScreenActivity.class));
 				break;
 		}
+		
 	}
 	
 	
@@ -83,5 +88,22 @@ public class BaseActivity extends Activity implements OnClickListener{
 			startActivity(new Intent(this, SearchActivity.class));
 		return false;
 	}
+	
+	
+	public boolean onTouch(View v, MotionEvent event) {
+		if(v instanceof Button) {
+			Drawable d = v.getBackground();
+			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+				d.setAlpha(50);
+				v.setBackgroundDrawable(d);
+			} else if (event.getAction() == MotionEvent.ACTION_UP) {
+				d.setAlpha(255);
+				v.setBackgroundDrawable(d);
+				
+			}
+		}
+		return false;
+	}
+
 
 }

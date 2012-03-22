@@ -11,8 +11,39 @@
 				 android:layout_height="1dp"
 				 android:background="@color/dark_gray_divider" 
 				 android:layout_below="@id/top_map"/>
+    <LinearLayout android:layout_width="fill_parent"
+				android:id="@+id/category" 
+			    android:background="@drawable/gradient_title"
+				android:layout_height="wrap_content"
+			    android:gravity="center"
+			    android:orientation="horizontal"
+			    android:textStyle="bold"
+			    android:textColor="@color/black"
+			    android:minHeight="40dp"
+			    android:layout_below="@id/sep_map"
+			>
+			<Spinner android:layout_width="wrap_content"
+				android:id="@+id/states" 
+				android:layout_height="wrap_content"
+			    android:gravity="left"
+			    android:background="@drawable/gradient_title"
+			    android:minHeight="40dp"/>
+			<Spinner android:layout_width="wrap_content"
+				android:id="@+id/times" 
+				android:layout_height="wrap_content"
+			    android:gravity="right"
+			    android:background="@drawable/gradient_title"
+			    android:minHeight="40dp"/>
+	</LinearLayout>
+    
+			<View
+			    android:id="@+id/sep_map2"
+				 android:layout_width="fill_parent"
+				 android:layout_height="1dp"
+				 android:background="@color/dark_gray_divider" 
+				 android:layout_below="@id/category"/>
     <com.google.android.maps.MapView
-        android:layout_below="@id/sep_map"
+        android:layout_below="@id/sep_map2"
         android:id="@+id/map"
         android:layout_width="match_parent" 
         android:layout_height="match_parent"

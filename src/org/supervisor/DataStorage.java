@@ -272,14 +272,25 @@ public class DataStorage {
 	}
 	
 	
+	public boolean isThereACurrentTask() {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		Cursor noTasksStarted = db.query(TASK_TABLE, new String[]{C_ID}, C_STATE + " = 2", null, null, null, null);
+		boolean test = (noTasksStarted.getCount()==0);
+			noTasksStarted.close();
+		return !test;
+	}
+	
+	
 	public void taskStarted(long id, Long dateMillis) {
 		Log.d("DATASTORAGE START TIME: " , Long.toString(dateMillis));
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = 2, " + C_START_TIME + " = " + dateMillis + 
+		if(!isThereACurrentTask()) {
+			String sql = "UPDATE " + TASK_TABLE + " SET " + C_STATE + " = 2, " + C_START_TIME + " = " + dateMillis + 
 			", "+ C_LAST_MODIFIED + " = " + dateMillis + ", " + C_PENDING_SYNC + " = 1 WHERE " + C_ID + " = " + id + ";";
-		db.execSQL(sql);
-		sql = "UPDATE " + FTS_TABLE + " SET " + C_STATE + " = 2 WHERE " + C_ID + " = " + id + ";";
-		db.execSQL(sql);
+			db.execSQL(sql);
+			sql = "UPDATE " + FTS_TABLE + " SET " + C_STATE + " = 2 WHERE " + C_ID + " = " + id + ";";
+			db.execSQL(sql);
+		}
 	}
 	
 	

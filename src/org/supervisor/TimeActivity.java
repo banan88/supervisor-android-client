@@ -27,8 +27,10 @@ public class TimeActivity extends BaseActivity{
 		name = (TextView) findViewById(R.id.category);
 		searchButton = (Button) findViewById(R.id.search);
 		searchButton.setOnClickListener(this);
+		searchButton.setOnTouchListener(this);
 		logo = (Button) findViewById(R.id.logo);
 		logo.setOnClickListener(this);
+		logo.setOnTouchListener(this);
 		toggle = (Button) findViewById(R.id.buttonToggle);
 		toggle.setOnClickListener(this);
 		tv1 = (TextView) findViewById(R.id.textView1);

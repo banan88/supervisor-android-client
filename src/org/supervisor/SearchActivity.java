@@ -46,8 +46,10 @@ public class SearchActivity extends BaseActivity {
 		setContentView(R.layout.layout_search);
 		startSearch = (Button) findViewById(R.id.start_search);
 		startSearch.setOnClickListener(this);
+		startSearch.setOnTouchListener(this);
 		shortLogo = (Button) findViewById(R.id.logo_short);
 		shortLogo.setOnClickListener(this);
+		shortLogo.setOnTouchListener(this);
 		spinner = (Spinner) findViewById(R.id.category);
 		
 		searchText = (EditText) findViewById(R.id.searchText);

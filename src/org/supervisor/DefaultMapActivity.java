@@ -1,5 +1,6 @@
 package org.supervisor;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import com.google.android.maps.GeoPoint;
@@ -7,30 +8,37 @@ import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
+import com.google.android.maps.OverlayItem;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
+import android.location.LocationManager;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.Window;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 
 
-public class DefaultMapActivity extends MapActivity implements LocationListener, OnClickListener{
+public class DefaultMapActivity extends MapActivity implements LocationListener, OnClickListener, OnTouchListener{
 
 	
 	private static String TAG = DefaultMapActivity.class.getSimpleName();
@@ -41,7 +49,23 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 	private SupervisorApplication global_app;
 	private GeoPoint geoPoint;
 	private Cursor tasksCursor;
-
+	private LocationManager locationManager;
+	private String provider;
+	private Location lastLocation;
+	private List<Overlay> allOverlays;
+	private TasksOverlay updatablePositionOverlay;
+	private TasksOverlay tasksPositionOverlay;
+	private Drawable userMarker;
+	private Drawable currentMarker;
+	private Drawable doneMarker;
+	private Drawable cancelMarker;
+	private Drawable pendingMarker;
+	private TaskUpdateReceiver receiver;
+	private IntentFilter filter;
+	private boolean animateToTaskPosition;
+	private Long taskId;
+	private Spinner states;
+	private Spinner times;
 	
 	protected void onDestroy() {
 		super.onDestroy();
@@ -49,7 +73,8 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 
 	protected void onPause() {
 		super.onPause();
-		tasksCursor.close();
+		locationManager.removeUpdates(this);
+		unregisterReceiver(receiver);
 	}
 
 
@@ -62,21 +87,78 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
         setContentView(R.layout.layout_default_map);
         searchButton = (Button) findViewById(R.id.search);
 		searchButton.setOnClickListener(this);
+		searchButton.setOnTouchListener(this);
 		logo = (Button) findViewById(R.id.logo);
 		logo.setOnClickListener(this);
+		logo.setOnTouchListener(this);
+		states = (Spinner) findViewById(R.id.states);
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+				this, R.array.spinner_state_entries, R.layout.spinner_text);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		states.setAdapter(adapter);
+		times = (Spinner) findViewById(R.id.times);
+		ArrayAdapter<CharSequence> adapter2 = ArrayAdapter.createFromResource(
+				this, R.array.spinner_time_entries, R.layout.spinner_text);
+		adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		times.setAdapter(adapter2);
+		
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		provider = locationManager.getBestProvider(new Criteria(), true);
+		lastLocation = locationManager.getLastKnownLocation(provider);
+		if(lastLocation == null) {
+			lastLocation = new Location(LocationManager.NETWORK_PROVIDER);
+			lastLocation.setLatitude(50.8167);
+			lastLocation.setLongitude(19.1167);
+		}
+		Log.d(TAG, "lastLocation: LAT: " + Double.toString(lastLocation.getLatitude()) + " LON: " + 
+		Double.toString(lastLocation.getLongitude()));
+		
+		userMarker = getResources().getDrawable(R.drawable.me);
+		currentMarker = getResources().getDrawable(R.drawable.current_marker);
+		pendingMarker = getResources().getDrawable(R.drawable.pending_marker);
+		doneMarker = getResources().getDrawable(R.drawable.done_marker);
+		cancelMarker = getResources().getDrawable(R.drawable.cancel_marker);
+		
+		try {
+			taskId = getIntent().getExtras().getLong("taskId");
+			Log.d(TAG + "task id", Long.toString(taskId));
+			animateToTaskPosition = true;
+		} catch (NullPointerException e) {
+			animateToTaskPosition = false;
+		}
 		
         mapView = (MapView) findViewById(R.id.map);	
         mapView.setBuiltInZoomControls(true);
         mapView.setSatellite(false);
         
         mapController = mapView.getController();
+        mapController.setZoom(16);
         
+        receiver = new TaskUpdateReceiver();
+        filter = new IntentFilter(SupervisorApplication.UPDATE_VIEW_INTENT);
+        registerReceiver(receiver, filter);
         
     }
     
 	protected void onResume() {
 		super.onResume();
-		setUp();
+		registerReceiver(receiver, filter);
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
+		if(animateToTaskPosition) {
+			Task task = global_app.getDataStorage().getTaskById(taskId);
+			GeoPoint tmp = new GeoPoint((int) (task.getLatitude()*1E6), (int) (task.getLongitude()*1E6));
+			mapController.animateTo(tmp);
+			states.setSelection(0);
+			times.setSelection(0);
+		}
+		else {
+			int lat = (int) (lastLocation.getLatitude() * 1E6);
+			int lng = (int) (lastLocation.getLongitude() * 1E6);
+			geoPoint = new GeoPoint(lat, lng);
+			mapController.animateTo(geoPoint);
+		}
+		paintCurrentPostion();
+		paintTasks();
 	}
 	
     
@@ -118,31 +200,99 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 		}
 	}
 		
-	
-    public void setUp() {
-    	mapView.invalidate();
-    	Location location = global_app.getLastLocation();
-        int lat = (int) (location.getLatitude() * 1E6);
-		int lng = (int) (location.getLongitude() * 1E6);
+	public void paintCurrentPostion() {
+		int lat = (int) (lastLocation.getLatitude() * 1E6);
+		int lng = (int) (lastLocation.getLongitude() * 1E6);
 		Log.d("defaultmap location", "lat: " + Integer.toString(lat) + " lon: " + Integer.toString(lng));
 		geoPoint = new GeoPoint(lat, lng);
-		mapController.setCenter(geoPoint);
-        mapController.setZoom(10);
-        mapController.animateTo(geoPoint);
-        
-        List<Overlay> overlays = mapView.getOverlays();
-        overlays.clear();
-        tasksCursor = global_app.getDataStorage().getActiveTasks();
-        overlays.add(new MyOverlay());
-        
+		
+		allOverlays = mapView.getOverlays();
+		allOverlays.remove(updatablePositionOverlay);
+		updatablePositionOverlay = new TasksOverlay(userMarker, this);
+		updatablePositionOverlay.addOverlay(new OverlayItem(geoPoint, global_app.getUsername(), Double.toString(lastLocation.getLatitude()) + " "
+				 + Double.toString(lastLocation.getLongitude())));
+		allOverlays.add(updatablePositionOverlay);
+		mapView.invalidate();  
+	}
+	
+    public void paintTasks() {
+    	allOverlays = mapView.getOverlays();
+    	allOverlays.remove(tasksPositionOverlay);
+    	tasksPositionOverlay = new TasksOverlay(doneMarker, this);
+    	tasksCursor = global_app.getDataStorage().getDoneAndCancelledTasks();
+    	DecimalFormat km = new DecimalFormat();
+    	km.setMaximumFractionDigits(2);
+    	DecimalFormat m = new DecimalFormat();
+    	m.setMaximumFractionDigits(1);
+        while(tasksCursor.moveToNext()) {
+        	double lat = tasksCursor.getDouble(tasksCursor.getColumnIndex(DataStorage.C_LAT));
+        	double lon = tasksCursor.getDouble(tasksCursor.getColumnIndex(DataStorage.C_LON));
+        	String taskTitle = (tasksCursor.getString(tasksCursor.getColumnIndex(DataStorage.C_NAME)));
+        	int taskState = (tasksCursor.getInt(tasksCursor.getColumnIndex(DataStorage.C_STATE)));
+        	GeoPoint taskLocation = new GeoPoint((int)(lat*1E6), (int)(lon*1E6));
+        	Location tmp = new Location(provider);
+        	tmp.setLatitude(lat);
+        	tmp.setLongitude(lon);
+        	double distance = lastLocation.distanceTo(tmp);
+        	String prettyDistance;
+        	if (distance > 1000)
+        		prettyDistance = km.format(distance / 1000) + "km";
+        	else 
+        		prettyDistance = m.format(distance) + "m";
+        	OverlayItem taskOverlayItem = new OverlayItem(taskLocation, taskTitle, 
+        			"oddalone o: " + prettyDistance);
+        	Drawable marker;
+        	switch(taskState){
+        		case 0:
+        			marker = cancelMarker;
+        			break;
+        		case 1:
+        			marker = pendingMarker;
+        			break;
+        		case 2:
+        			marker = currentMarker;
+        			break;
+        		default:
+        			marker = doneMarker;
+        			break;
+        	}
+        	int w = marker.getIntrinsicWidth();
+        	int h = marker.getIntrinsicHeight();
+        	marker.setBounds(-w / 2, -h, w / 2, 0);
+        	taskOverlayItem.setMarker(marker);
+        	tasksPositionOverlay.addOverlay(taskOverlayItem);
+        }
+        allOverlays.add(tasksPositionOverlay);
+        mapView.invalidate();
+        tasksCursor.close();
     }
+    
+    
+    public boolean onTouch(View v, MotionEvent event) {
+		if(v instanceof Button) {
+			Drawable d = v.getBackground();
+			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+				d.setAlpha(50);
+				v.setBackgroundDrawable(d);
+			} else if (event.getAction() == MotionEvent.ACTION_UP) {
+				d.setAlpha(255);
+				v.setBackgroundDrawable(d);
+				
+			}
+		}
+		return false;
+	}
+
     
 
     protected boolean isRouteDisplayed() { return false; }
 
+    
 	public void onLocationChanged(Location location) {
-		Log.d("onLocationChanged() from defaultMap","called");
-		setUp();
+		lastLocation = location;
+		Log.d(TAG, "lastLocation change: LAT: " + Double.toString(lastLocation.getLatitude()) + " LON: " + 
+				Double.toString(lastLocation.getLongitude()));
+		paintCurrentPostion();
 	}
 
 	public void onProviderDisabled(String provider) {}
@@ -150,42 +300,16 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 	public void onProviderEnabled(String provider) {}
 
 	public void onStatusChanged(String provider, int status, Bundle extras) {}
+
 	
-	private class MyOverlay extends com.google.android.maps.Overlay {
+	
+	class TaskUpdateReceiver extends BroadcastReceiver{
 
-	    @Override
-	    public void draw(Canvas canvas, MapView mapView, boolean shadow) {                              
-	        super.draw(canvas, mapView, shadow);
+		public void onReceive(Context context, Intent intent) {
+			DefaultMapActivity.this.paintTasks();
+		}
 
-	        if (!shadow) {                                                                             
-	            Point pointGfx = new Point();
-	            mapView.getProjection().toPixels(geoPoint, pointGfx);                                     
-
-	            Bitmap bmp = BitmapFactory.decodeResource(getResources(), android.R.drawable.ic_menu_myplaces);   
-	        
-	            int x = pointGfx.x - bmp.getWidth() / 2;                                                  
-	        
-	            int y = pointGfx.y - bmp.getHeight();                                                     
-	        
-	            canvas.drawBitmap(bmp, x, y, null);      
-	            while(tasksCursor.moveToNext()) { // wonder if it will work...
-	            	GeoPoint tmp = new GeoPoint(
-	            			(int)(tasksCursor.getDouble(tasksCursor.getColumnIndex(DataStorage.C_LAT))*1E6), 
-	            			(int)(tasksCursor.getDouble(tasksCursor.getColumnIndex(DataStorage.C_LAT))*1E6));
-	            	mapView.getProjection().toPixels(tmp, pointGfx);
-	            	bmp = BitmapFactory.decodeResource(getResources(), android.R.drawable.btn_star_big_on);   
-	    	        
-		            x = pointGfx.x - bmp.getWidth() / 2;                                                  
-		        
-		            y = pointGfx.y - bmp.getHeight();                                                     
-		        
-		            canvas.drawBitmap(bmp, x, y, null);
-	            }
-	        }
-
-	    }
 
 	}
-	
 }
 
