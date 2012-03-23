@@ -31,9 +31,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 
@@ -64,8 +62,6 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 	private IntentFilter filter;
 	private boolean animateToTaskPosition;
 	private Long taskId;
-	private Spinner states;
-	private Spinner times;
 	
 	protected void onDestroy() {
 		super.onDestroy();
@@ -91,16 +87,6 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 		logo = (Button) findViewById(R.id.logo);
 		logo.setOnClickListener(this);
 		logo.setOnTouchListener(this);
-		states = (Spinner) findViewById(R.id.states);
-		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-				this, R.array.spinner_state_entries, R.layout.spinner_text);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		states.setAdapter(adapter);
-		times = (Spinner) findViewById(R.id.times);
-		ArrayAdapter<CharSequence> adapter2 = ArrayAdapter.createFromResource(
-				this, R.array.spinner_time_entries, R.layout.spinner_text);
-		adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		times.setAdapter(adapter2);
 		
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		provider = locationManager.getBestProvider(new Criteria(), true);
@@ -148,8 +134,6 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 			Task task = global_app.getDataStorage().getTaskById(taskId);
 			GeoPoint tmp = new GeoPoint((int) (task.getLatitude()*1E6), (int) (task.getLongitude()*1E6));
 			mapController.animateTo(tmp);
-			states.setSelection(0);
-			times.setSelection(0);
 		}
 		else {
 			int lat = (int) (lastLocation.getLatitude() * 1E6);
@@ -219,7 +203,7 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
     	allOverlays = mapView.getOverlays();
     	allOverlays.remove(tasksPositionOverlay);
     	tasksPositionOverlay = new TasksOverlay(doneMarker, this);
-    	tasksCursor = global_app.getDataStorage().getDoneAndCancelledTasks();
+    	tasksCursor = global_app.getDataStorage().getAllTasks();
     	DecimalFormat km = new DecimalFormat();
     	km.setMaximumFractionDigits(2);
     	DecimalFormat m = new DecimalFormat();

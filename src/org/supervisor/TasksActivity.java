@@ -118,35 +118,33 @@ public class TasksActivity extends BaseActivity{
     	public View getView(int position, View convertView, ViewGroup parent) {
     		cursor.moveToPosition(position);
     		ViewHolder holder;
-    		if(convertView == null) {
+    		if(convertView == null)
     			convertView = inflater.inflate(R.layout.tasklist_item,null,true);
-    			holder = new ViewHolder();
-    			holder.textView1 = (TextView) convertView.findViewById(R.id.firstline);
-    			holder.textView2 = (TextView) convertView.findViewById(R.id.secondline);
+    		holder = new ViewHolder();
+    		holder.textView1 = (TextView) convertView.findViewById(R.id.firstline);
+    		holder.textView2 = (TextView) convertView.findViewById(R.id.secondline);
     			
-                holder.imageView = (ImageView) convertView.findViewById(R.id.listitem_icon);
-                int state = cursor.getInt(cursor.getColumnIndex(DataStorage.C_STATE));
-                Log.d(TAG, Integer.toString(state));
-                switch(state) {
-                	case 3:
-                		holder.imageView.setImageResource(R.drawable.done);
-                		break;
-                	case 2:
-                		holder.imageView.setImageResource(R.drawable.current);
-                		break;
-                	case 1:
-                		holder.imageView.setImageResource(R.drawable.clock);
-                		break;
-                	case 0:
-                		holder.imageView.setImageResource(R.drawable.cancel);
-                		break;
-                }
+            holder.imageView = (ImageView) convertView.findViewById(R.id.listitem_icon);
+            int state = cursor.getInt(cursor.getColumnIndex(DataStorage.C_STATE));
+            Log.d(TAG, Integer.toString(state));
+            switch(state) {
+               	case 3:
+               		holder.imageView.setImageResource(R.drawable.done);
+               		break;
+                case 2:
+                	holder.imageView.setImageResource(R.drawable.current);
+                	break;
+                case 1:
+                	holder.imageView.setImageResource(R.drawable.clock);
+                	break;
+                case 0:
+                	holder.imageView.setImageResource(R.drawable.cancel);
+                	break;
+            }
                 
-                convertView.setTag(holder);
-    		}
-    		else {
-    			holder = (ViewHolder) convertView.getTag();
-    		}
+            convertView.setTag(holder);
+    		holder = (ViewHolder) convertView.getTag();
+    		
     		
     		String s = cursor.getString(cursor.getColumnIndex(DataStorage.C_NAME));
             holder.textView1.setText(s);

@@ -37,7 +37,11 @@ public class DataStorage {
 	static final String C_WORK_FINISH = "work_finish";
 	static final String C_WORK_DATE = "work_date";
 	private static final String FTS_TABLE = "text_search";
-	
+	private static final String TASK_STATES_TABLE = "task_states"; //wszystkie dostępne stany zadań możliwe do wybrania (pobierane tylko te z is_displayed = true)
+	static final String C_STATE_DESCRIPTION = "state_description";
+	static final String C_TASKS_ARE_ARCHIVED = "is_archived";
+	private static final String TASKS_HISTORY_TABLE = "tasks_history"; // do zapisywania zmian stanów wykonanych przez fieldusera
+	to do : tworzenie taskhistory i task state, modyfikowanie task history, odpowiednie wyswietlanie stanow we wlasciwosciach. omg
 	final DBHelper dbHelper;
 	
 	private class DBHelper extends SQLiteOpenHelper {
@@ -67,6 +71,8 @@ public class DataStorage {
 			db.execSQL("CREATE VIRTUAL TABLE " + FTS_TABLE + " USING fts3(" + 
 					C_ID + ", " + C_STATE + ", " + C_DESC + ", " + C_NAME + ", "  + C_LAST_MODIFIED + ", " + C_SUPERVISOR +");");
 			Log.d(TAG, "full text search virtual table created");
+			
+			sql = "CREATE TABLE " + TASK_STATES_TABLE + " ( ";
 		}
 
 		
@@ -152,6 +158,13 @@ public class DataStorage {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		return db.query(TASK_TABLE, null, C_STATE + " LIKE " + status, null, null, null, C_LAST_MODIFIED + " DESC");
 	}
+	
+	public Cursor getAllTasks() {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		return db.query(TASK_TABLE, null, null, null, null, null, C_LAST_MODIFIED + " DESC");
+	}
+	
+	
 	
 	
 	public Task getCurrentTask() {
