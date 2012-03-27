@@ -40,8 +40,16 @@ public class DataStorage {
 	private static final String TASK_STATES_TABLE = "task_states"; //wszystkie dostępne stany zadań możliwe do wybrania (pobierane tylko te z is_displayed = true)
 	static final String C_STATE_DESCRIPTION = "state_description";
 	static final String C_TASKS_ARE_ARCHIVED = "is_archived";
+	static final String C_IS_VISIBLE = "is_visible";
+	static final String C_CAN_BE_TOGGLED = "can_be_toggled";
+	static final String C_TOGGLED_FROM = "toggled_from";
 	private static final String TASKS_HISTORY_TABLE = "tasks_history"; // do zapisywania zmian stanów wykonanych przez fieldusera
-	to do : tworzenie taskhistory i task state, modyfikowanie task history, odpowiednie wyswietlanie stanow we wlasciwosciach. omg
+	static final String C_TASK_REFERENCE = "task";
+	static final String C_TASK_STATE_CHANGED_TO = "state_changed_to";
+	static final String C_CHANGE_TIME = "change_time";
+	static final String C_CHANGE_DESCRIPTION = "change_description";
+	
+	//to do : tworzenie taskhistory i task state, modyfikowanie task history, odpowiednie wyswietlanie stanow we wlasciwosciach. omg
 	final DBHelper dbHelper;
 	
 	private class DBHelper extends SQLiteOpenHelper {
@@ -55,7 +63,10 @@ public class DataStorage {
 		
 		
 		public void onCreate(SQLiteDatabase db) {
-			String sql = "CREATE TABLE " + TASK_TABLE + " ( " + C_ID + " integer primary key, " +
+			String sql = "PRAGMA foreign_keys = ON;";
+			db.execSQL(sql);
+			
+			sql = "CREATE TABLE " + TASK_TABLE + " ( " + C_ID + " integer primary key, " +
 				C_NAME + " text, " + C_DESC + " text, " + C_LAT + " real, " + C_LON + " real, " +
 				C_STATE + " integer, " + C_CREATION_TIME + " integer, " + C_LAST_MODIFIED + " integer, " +
 				C_FINISH_TIME + " integer, " + C_START_TIME + " integer, " + C_VERSION + " integer, " + 
@@ -72,7 +83,23 @@ public class DataStorage {
 					C_ID + ", " + C_STATE + ", " + C_DESC + ", " + C_NAME + ", "  + C_LAST_MODIFIED + ", " + C_SUPERVISOR +");");
 			Log.d(TAG, "full text search virtual table created");
 			
-			sql = "CREATE TABLE " + TASK_STATES_TABLE + " ( ";
+			
+			sql = "CREATE TABLE " +TASK_STATES_TABLE + " (" + C_ID + " integer NOT NULL PRIMARY KEY, " + C_STATE_DESCRIPTION +
+					" text NOT NULL," + C_IS_VISIBLE + " integer NOT NULL, " + C_TASKS_ARE_ARCHIVED +" integer NOT NULL," + C_CAN_BE_TOGGLED +
+					" integer NOT NULL, " + C_TOGGLED_FROM + " integer, FOREIGN KEY (" + C_TOGGLED_FROM + ") " +
+					"REFERENCES " + TASK_STATES_TABLE +" (" + C_ID +"));";
+			db.execSQL(sql);	
+			Log.d(TAG, "task states created");
+			
+			
+			sql = "CREATE TABLE " + TASKS_HISTORY_TABLE + " ( "+ C_ID + " integer primary key, " + C_TASK_REFERENCE + " integer, " 
+					+ C_TASK_STATE_CHANGED_TO + " integer," + C_CHANGE_TIME + " integer, " + C_CHANGE_DESCRIPTION + " text, FOREIGN KEY (" +
+					C_TASK_REFERENCE + ") REFERENCES " + TASK_TABLE + "(" + C_ID + "), FOREIGN KEY (" + C_TASK_STATE_CHANGED_TO +
+					") REFERENCES " + TASK_STATES_TABLE + "(" + C_ID + "));";
+			db.execSQL(sql);
+			
+			
+
 		}
 
 		
@@ -117,7 +144,7 @@ public class DataStorage {
 	}
 	
 	
-	public void insert(ContentValues values) {
+	public void insertTaskUpdates(ContentValues values) {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		ContentValues ftsVals = new ContentValues(); //stripped values for ftstable
 		ftsVals.put(C_ID, values.getAsLong(C_ID));
@@ -146,6 +173,18 @@ public class DataStorage {
 			cursor.close();
 		}
 	}
+	
+	public void insertTaskStatesTableUpdates(ContentValues values) {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		try {
+			db.insertOrThrow(TASK_STATES_TABLE, null, values);
+		} catch (SQLException e) {
+			Long id = values.getAsLong(C_ID);
+			db.update(TASK_STATES_TABLE, values, C_ID + " = " + id, null);
+			Log.d(TAG, "duplicate id, state was updated");
+		}
+	}
+
 	
 	
 	public Cursor getActiveTasks() {

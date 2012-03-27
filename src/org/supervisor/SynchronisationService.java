@@ -3,9 +3,11 @@ package org.supervisor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import android.accounts.NetworkErrorException;
 import android.app.IntentService;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.util.Log;
@@ -47,6 +49,22 @@ public class SynchronisationService extends IntentService {
 			try {
 				try {
 					Cursor cursor;
+					if(global_app.getTaskStatesTableVersion() < ApiManager.checkTaskStatesTableVersion()) {
+						ArrayList<HashMap<String, Object>> updates = ApiManager.getTaskStatesUpdates();
+						ContentValues cv = new ContentValues();
+						HashMap<String, Object> singleState = new HashMap<String, Object>();
+						for (int i = 0 ; i < updates.size(); ++i){
+							singleState = updates.get(i);
+							cv.put(DataStorage.C_STATE_DESCRIPTION, (String) singleState.get("state_description"));
+							cv.put(DataStorage.C_IS_VISIBLE, (Boolean) singleState.get("is_displayed"));
+							cv.put(DataStorage.C_TASKS_ARE_ARCHIVED, (Boolean) singleState.get("tasks_are_archived"));
+							cv.put(DataStorage.C_CAN_BE_TOGGLED, (Boolean) singleState.get("can_be_toggled"));
+							cv.put(DataStorage.C_TOGGLED_FROM, (Boolean) singleState.get("toggled_from"));
+							dataStorage.insertTaskStatesTableUpdates(cv);
+							Log.d(TAG, "inserted cvs!");
+						}
+					}
+						ApiManager.getTaskStatesUpdates();
 					if(global_app.getDataStorage().isEmpty()) 
 						tasks = ApiManager.getNTasks(100);
 					else {

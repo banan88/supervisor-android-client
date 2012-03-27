@@ -263,11 +263,22 @@ public class SupervisorApplication extends Application {
 			values.put(DataStorage.C_VERSION, task.getVersion());
 			values.put(DataStorage.C_LAST_SYNC, task.getLastSynced());
 			values.put(DataStorage.C_SUPERVISOR, task.getSupervisor());
-			dataStorage.insert(values);		
+			dataStorage.insertTaskUpdates(values);		
 		}
 		dataStorage.close();
 		return tasks.size();
 	}		
+	
+	
+	public void setTaskStatesTableVersion(int version){
+		Editor preferenceEditor = prefs.edit();
+		preferenceEditor.putInt("TASK_STATES_TABLE_VERSION", version);
+		preferenceEditor.commit();
+	}
+	
+	public int getTaskStatesTableVersion() {
+		return prefs.getInt("TASK_STATES_TABLE_VERSION", 0);
+	}
 	
 	
 	public boolean checkGPS() {

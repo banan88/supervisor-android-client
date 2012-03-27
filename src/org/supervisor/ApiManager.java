@@ -3,6 +3,7 @@ package org.supervisor;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 
@@ -146,6 +147,63 @@ public class ApiManager {
 		}
 		return buildTaskList(apiCall(get));
 	}
+	
+	
+	public static int checkTaskStatesTableVersion() throws NetworkErrorException {
+		Log.d(TAG, "called checkTasksTableVersion()");
+		
+		HttpGet get = new HttpGet(HOST + "get_task_state_table_version/");
+		try {
+			try {
+				get.addHeader(new BasicScheme().authenticate(credentials, get));
+			} catch (AuthenticationException e) {
+				throw new IllegalArgumentException();
+			}
+		} catch (IllegalArgumentException e) {
+			throw new NetworkErrorException("401");
+		}
+		String v = apiCall(get);  
+		Log.d(TAG, "tasksTableVersion: " + v);
+		return Integer.parseInt(v);
+	}
+	
+	
+	public static ArrayList<HashMap<String, Object>> getTaskStatesUpdates() throws NetworkErrorException {
+		Log.d(TAG, "getTaskStatesUpdates()");
+		
+		HttpGet get = new HttpGet(HOST + "get_task_state_table_updates/");
+		ArrayList<HashMap<String, Object>> updates = new ArrayList<HashMap<String,Object>>();
+		try {
+			try {
+				get.addHeader(new BasicScheme().authenticate(credentials, get));
+			} catch (AuthenticationException e) {
+				throw new IllegalArgumentException();
+			}
+		} catch (IllegalArgumentException e) {
+			throw new NetworkErrorException("401");
+		}
+		try {
+			JSONArray states = new JSONArray(apiCall(get));
+			JSONObject singleState;
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			
+			for (int i = 0 ; i < states.length(); ++i){
+				singleState = states.getJSONObject(i);
+				map.put(DataStorage.C_STATE_DESCRIPTION, singleState.getString("state_description"));
+				map.put(DataStorage.C_IS_VISIBLE, singleState.getBoolean("is_displayed"));
+				map.put(DataStorage.C_TASKS_ARE_ARCHIVED, singleState.getBoolean("tasks_are_archived"));
+				map.put(DataStorage.C_CAN_BE_TOGGLED, singleState.getBoolean("can_be_toggled"));
+				map.put(DataStorage.C_TOGGLED_FROM, singleState.getBoolean("toggled_from"));
+				updates.add(map);
+			}
+		} catch (JSONException e) {
+			Log.d("JSONException in buildTaskList()", e.getLocalizedMessage());
+			throw new NetworkErrorException("500");
+		}
+		return updates;
+	}
+	
+	
 	
 	
 	public static ArrayList<Task> getTasksSinceLastSync() throws NetworkErrorException {
