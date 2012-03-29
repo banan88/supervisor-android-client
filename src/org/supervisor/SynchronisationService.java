@@ -3,11 +3,9 @@ package org.supervisor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import android.accounts.NetworkErrorException;
 import android.app.IntentService;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.util.Log;
@@ -49,6 +47,7 @@ public class SynchronisationService extends IntentService {
 			try {
 				try {
 					Cursor cursor;
+					/*
 					if(global_app.getTaskStatesTableVersion() < ApiManager.checkTaskStatesTableVersion()) {
 						ArrayList<HashMap<String, Object>> updates = ApiManager.getTaskStatesUpdates();
 						ContentValues cv = new ContentValues();
@@ -64,21 +63,31 @@ public class SynchronisationService extends IntentService {
 							Log.d(TAG, "inserted cvs!");
 						}
 					}
-						ApiManager.getTaskStatesUpdates();
+						ApiManager.getTaskStatesUpdates(); */
 					if(global_app.getDataStorage().isEmpty()) 
 						tasks = ApiManager.getNTasks(100);
 					else {
 						cursor = dataStorage.getNonSyncedTasks();
-						if (ApiManager.changeTasksStates(cursor)) {
-							dataStorage.clearNonSyncedTasks();
-							Log.d(TAG, "clearNonSyncedTasks called");
-						}
+						if(cursor.getCount() > 0)
+							if (ApiManager.changeTasksStates(cursor)) {
+								dataStorage.clearNonSyncedTasks();
+								Log.d(TAG, "clearNonSyncedTasks called");
+							}
 						cursor.close();
 						tasks = ApiManager.getTasksSinceLastSync();
 					}
 					cursor = dataStorage.getNonSyncedWorkTimes();
-					if (ApiManager.changeWorkTimes(cursor))
-						dataStorage.clearNonSyncedWorkTimes();
+					if(cursor.getCount() > 0)
+						if (ApiManager.changeWorkTimes(cursor))
+							dataStorage.clearNonSyncedWorkTimes();
+					cursor.close();
+					cursor = dataStorage.getTaskHistorySince(global_app.getLastSyncTime());
+					if(cursor.getCount() > 0)
+						ApiManager.sendTasksHistory(cursor);
+					cursor.close();
+					cursor = dataStorage.getUserPositionSince(global_app.getLastSyncTime());
+					if(cursor.getCount() > 0)
+						ApiManager.sendUserLocations(cursor);
 					cursor.close();
 					global_app.setLastSyncTimeToNow(true);
 				} catch (IllegalArgumentException e) {

@@ -106,15 +106,18 @@ public class MainScreenActivity extends BaseActivity {
 	 
 	 
 	 public void syncOnClick() {
-		if ( global_app.isNetworkOn() ) 
+		 if ( global_app.isNetworkOn() ){
+			syncImage.startAnimation(AnimationUtils.loadAnimation(MainScreenActivity.this, R.anim.sync_button_rotate));
+			syncText.postDelayed(new Thread() {
+				public void run() {
+						updateLastSyncText(); 
+						interrupt();
+				}
+			}, 3000);
 			super.runForcedSync();
-		syncImage.startAnimation(AnimationUtils.loadAnimation(MainScreenActivity.this, R.anim.sync_button_rotate));
-		syncText.postDelayed(new Thread() {
-			public void run() {
-					updateLastSyncText(); 
-					interrupt();
-			}
-		}, 3000);
+		 }
+		else
+			Toast.makeText(this, R.string.dialog_text_no_network, Toast.LENGTH_SHORT).show();
 	 }
 	 
 	 

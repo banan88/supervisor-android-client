@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.location.Location;
 import android.provider.BaseColumns;
 import android.text.format.Time;
 import android.util.Log;
@@ -37,7 +38,6 @@ public class DataStorage {
 	static final String C_WORK_FINISH = "work_finish";
 	static final String C_WORK_DATE = "work_date";
 	private static final String FTS_TABLE = "text_search";
-	private static final String TASK_STATES_TABLE = "task_states"; //wszystkie dostępne stany zadań możliwe do wybrania (pobierane tylko te z is_displayed = true)
 	static final String C_STATE_DESCRIPTION = "state_description";
 	static final String C_TASKS_ARE_ARCHIVED = "is_archived";
 	static final String C_IS_VISIBLE = "is_visible";
@@ -48,9 +48,15 @@ public class DataStorage {
 	static final String C_TASK_STATE_CHANGED_TO = "state_changed_to";
 	static final String C_CHANGE_TIME = "change_time";
 	static final String C_CHANGE_DESCRIPTION = "change_description";
+	static final String C_CHANGE_LATITUDE = "change_latitude";
+	static final String C_CHANGE_LONGITUDE = "change_longitude";
+	private static final String USER_LOCATIONS_TABLE = "user_locations";
+	static final String C_TIMESTAMP= "timestamp";
+	
 	
 	//to do : tworzenie taskhistory i task state, modyfikowanie task history, odpowiednie wyswietlanie stanow we wlasciwosciach. omg
 	final DBHelper dbHelper;
+	private SupervisorApplication global_app;
 	
 	private class DBHelper extends SQLiteOpenHelper {
 		
@@ -59,6 +65,7 @@ public class DataStorage {
 		
 		public DBHelper(Context context){
 			super(context, DB_NAME, null, DB_VERSION);
+			global_app = (SupervisorApplication) context.getApplicationContext();
 		}
 		
 		
@@ -84,18 +91,15 @@ public class DataStorage {
 			Log.d(TAG, "full text search virtual table created");
 			
 			
-			sql = "CREATE TABLE " +TASK_STATES_TABLE + " (" + C_ID + " integer NOT NULL PRIMARY KEY, " + C_STATE_DESCRIPTION +
-					" text NOT NULL," + C_IS_VISIBLE + " integer NOT NULL, " + C_TASKS_ARE_ARCHIVED +" integer NOT NULL," + C_CAN_BE_TOGGLED +
-					" integer NOT NULL, " + C_TOGGLED_FROM + " integer, FOREIGN KEY (" + C_TOGGLED_FROM + ") " +
-					"REFERENCES " + TASK_STATES_TABLE +" (" + C_ID +"));";
+			sql = "CREATE TABLE " + USER_LOCATIONS_TABLE + " (" + C_ID + " integer primary key autoincrement, " + C_TIMESTAMP + " integer, " +
+					 C_LAT + " real, " + C_LON + " real);";
 			db.execSQL(sql);	
-			Log.d(TAG, "task states created");
 			
 			
-			sql = "CREATE TABLE " + TASKS_HISTORY_TABLE + " ( "+ C_ID + " integer primary key, " + C_TASK_REFERENCE + " integer, " 
-					+ C_TASK_STATE_CHANGED_TO + " integer," + C_CHANGE_TIME + " integer, " + C_CHANGE_DESCRIPTION + " text, FOREIGN KEY (" +
-					C_TASK_REFERENCE + ") REFERENCES " + TASK_TABLE + "(" + C_ID + "), FOREIGN KEY (" + C_TASK_STATE_CHANGED_TO +
-					") REFERENCES " + TASK_STATES_TABLE + "(" + C_ID + "));";
+			sql = "CREATE TABLE " + TASKS_HISTORY_TABLE + " ( "+ C_ID + " integer primary key AUTOINCREMENT, " + C_TASK_REFERENCE +
+					" integer, " + C_TASK_STATE_CHANGED_TO + " integer," + C_CHANGE_TIME + " integer, " + C_CHANGE_DESCRIPTION + 
+					" text," + C_CHANGE_LATITUDE + " real, " + C_CHANGE_LONGITUDE + " real, " + "FOREIGN KEY " +
+					"(" +C_TASK_REFERENCE + ") REFERENCES " + TASK_TABLE + "(" + C_ID + "));";
 			db.execSQL(sql);
 			
 			
@@ -173,7 +177,7 @@ public class DataStorage {
 			cursor.close();
 		}
 	}
-	
+	/*
 	public void insertTaskStatesTableUpdates(ContentValues values) {
 		SQLiteDatabase db = dbHelper.getWritableDatabase();
 		try {
@@ -184,8 +188,53 @@ public class DataStorage {
 			Log.d(TAG, "duplicate id, state was updated");
 		}
 	}
-
+	*/
 	
+	public void insertTaskHistory(long taskId, int newState) {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		ContentValues cv = new ContentValues();
+		cv.put(C_TASK_REFERENCE, taskId);
+		cv.put(C_TASK_STATE_CHANGED_TO, newState);
+		Time t = new Time();
+		t.setToNow();
+		cv.put(C_CHANGE_TIME, t.toMillis(false));
+		String state;
+		if(newState ==2 )
+			state = global_app.getString(R.string.task_state_current);
+		else
+			state = global_app.getString(R.string.task_state_done);
+		String description = String.format("Użytkownik \"%s\" zmienił stan zadania o nazwie \"%s\" na \"%s\"", 
+				global_app.getUsername(),
+				getTaskById(taskId).getName(),
+				state);
+		cv.put(C_CHANGE_DESCRIPTION, description);
+		Location last = global_app.getLastLocation();
+		cv.put(C_CHANGE_LATITUDE, last.getLatitude());
+		cv.put(C_CHANGE_LONGITUDE, last.getLongitude());
+		db.insert(TASKS_HISTORY_TABLE, null, cv);
+	}
+	
+	
+	public Cursor getTaskHistorySince(long timestamp) {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		String time = Long.toString(timestamp);
+		return db.query(TASKS_HISTORY_TABLE, null, C_CHANGE_TIME + " > " + time, null, null, null, null);
+	}
+	
+	public void insertUserPositionUpdate(long timestamp, double latitude, double longitude) {
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		ContentValues cv = new ContentValues();
+		cv.put(C_TIMESTAMP, timestamp);
+		cv.put(C_LAT, latitude);
+		cv.put(C_LON, longitude);
+		db.insert(USER_LOCATIONS_TABLE, null, cv);
+	}
+	
+	public Cursor getUserPositionSince(long timestamp) {
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		String time = Long.toString(timestamp);
+		return db.query(USER_LOCATIONS_TABLE, null, C_TIMESTAMP + " > " + time, null, null, null, null);
+	}
 	
 	public Cursor getActiveTasks() {
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -342,6 +391,7 @@ public class DataStorage {
 			db.execSQL(sql);
 			sql = "UPDATE " + FTS_TABLE + " SET " + C_STATE + " = 2 WHERE " + C_ID + " = " + id + ";";
 			db.execSQL(sql);
+			insertTaskHistory(id, 2);
 		}
 	}
 	
@@ -354,6 +404,7 @@ public class DataStorage {
 		db.execSQL(sql);
 		sql = "UPDATE " + FTS_TABLE + " SET " + C_STATE + " = 3 WHERE " + C_ID + " = " + id + ";";
 		db.execSQL(sql);
+		insertTaskHistory(id, 3);
 	}
 	
 	public Cursor getNonSyncedTasks() {

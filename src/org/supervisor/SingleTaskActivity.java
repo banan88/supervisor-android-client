@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
@@ -21,6 +23,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class SingleTaskActivity extends BaseActivity {
@@ -40,7 +43,7 @@ public class SingleTaskActivity extends BaseActivity {
 	private Button details;
 	private Dialog dialog;
 	private TextView desc;
-	
+	private Location taskLocation;
 	
 	
 	public void onCreate(Bundle savedInstanceState) {
@@ -76,6 +79,9 @@ public class SingleTaskActivity extends BaseActivity {
     		task = dataStorage.getCurrentTask();
     	
        	if (task != null) {
+        	taskLocation = new Location(LocationManager.NETWORK_PROVIDER);
+    		taskLocation.setLatitude(task.getLatitude());
+    		taskLocation.setLongitude(task.getLongitude());
        		inner.setVisibility(View.VISIBLE);
        		String defaultCancelled = " (Anulowane";
        		switch(task.getState()) {
@@ -219,9 +225,13 @@ public class SingleTaskActivity extends BaseActivity {
 				setUp();
 				break;
 			case 102:
-				dataStorage.taskFinished(task.getId(), t.toMillis(false));
-				taskState = 0;
-				setUp();
+				if(taskLocation.distanceTo(global_app.getLastLocation()) < 300) {
+					dataStorage.taskFinished(task.getId(), t.toMillis(false));
+					taskState = 0;
+					setUp();
+				}
+				else 
+					Toast.makeText(this, getString(R.string.too_far), Toast.LENGTH_LONG).show();
 				break;
 		}
 		return true;

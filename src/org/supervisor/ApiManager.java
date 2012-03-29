@@ -3,7 +3,6 @@ package org.supervisor;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 
 
@@ -148,7 +147,7 @@ public class ApiManager {
 		return buildTaskList(apiCall(get));
 	}
 	
-	
+	/*
 	public static int checkTaskStatesTableVersion() throws NetworkErrorException {
 		Log.d(TAG, "called checkTasksTableVersion()");
 		
@@ -202,7 +201,7 @@ public class ApiManager {
 		}
 		return updates;
 	}
-	
+	*/
 	
 	
 	
@@ -268,7 +267,8 @@ public class ApiManager {
 	}
 	
 	
-public static boolean changeWorkTimes(Cursor c) throws NetworkErrorException {
+	
+	public static boolean changeWorkTimes(Cursor c) throws NetworkErrorException {
 		
 		if (c.getCount() == 0) 
 			return false; //no need to reset nonsynced work times, there are none pending
@@ -307,5 +307,96 @@ public static boolean changeWorkTimes(Cursor c) throws NetworkErrorException {
 		}
 		return true;
 	}
+	
+	
+public static boolean sendTasksHistory(Cursor c) throws NetworkErrorException {
+		
+		if (c.getCount() == 0) 
+			return false; 
+		JSONArray unsyncedHistory = new JSONArray();
+		StringEntity entity = null;
+		JSONArray entry;
+		
+		while(c.moveToNext()) {
+			try{
+					entry = new JSONArray();
+					entry.put(c.getInt(c.getColumnIndex(DataStorage.C_TASK_REFERENCE)));
+					entry.put(c.getInt(c.getColumnIndex(DataStorage.C_TASK_STATE_CHANGED_TO)));
+					entry.put(c.getLong(c.getColumnIndex(DataStorage.C_CHANGE_TIME)));
+					entry.put(c.getString(c.getColumnIndex(DataStorage.C_CHANGE_DESCRIPTION)));
+					entry.put(c.getDouble(c.getColumnIndex(DataStorage.C_CHANGE_LATITUDE)));
+					entry.put(c.getDouble(c.getColumnIndex(DataStorage.C_CHANGE_LONGITUDE)));
+					unsyncedHistory.put(entry);
+			}catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+		c.close();
+		try {
+			Log.d("JSON TIME FROM DATABASE start, finish", unsyncedHistory.toString());
 
+			entity = new StringEntity(unsyncedHistory.toString(), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			
+		}
+		try {
+			HttpPost post = new HttpPost(HOST + "new_tasks_history/");
+			post.setEntity(entity);
+			post.addHeader("Accept", "application/json");
+			post.addHeader("Content-type", "application/json");
+			try {
+				post.addHeader(new BasicScheme().authenticate(credentials, post));
+			} catch (AuthenticationException e) {
+				Log.d(TAG, e.getMessage());
+			}
+			apiCall(post);
+		} catch (NullPointerException e) {
+			throw new NetworkErrorException("404");
+		}
+		return true;
+	}
+
+
+public static boolean sendUserLocations(Cursor c) throws NetworkErrorException {
+	if (c.getCount() == 0) 
+		return false; 
+	JSONArray unsyncedLocations = new JSONArray();
+	StringEntity entity = null;
+	JSONArray entry;
+	
+	while(c.moveToNext()) {
+		try{
+				entry = new JSONArray();
+				entry.put(c.getLong(c.getColumnIndex(DataStorage.C_TIMESTAMP)));
+				entry.put(c.getDouble(c.getColumnIndex(DataStorage.C_LAT)));
+				entry.put(c.getDouble(c.getColumnIndex(DataStorage.C_LON)));
+				unsyncedLocations.put(entry);
+		}catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+	c.close();
+	try {
+		Log.d("JSON TIME FROM DATABASE start, finish", unsyncedLocations.toString());
+
+		entity = new StringEntity(unsyncedLocations.toString(), "UTF-8");
+	} catch (UnsupportedEncodingException e) {
+		
+	}
+	try {
+		HttpPost post = new HttpPost(HOST + "new_user_locations/");
+		post.setEntity(entity);
+		post.addHeader("Accept", "application/json");
+		post.addHeader("Content-type", "application/json");
+		try {
+			post.addHeader(new BasicScheme().authenticate(credentials, post));
+		} catch (AuthenticationException e) {
+			Log.d(TAG, e.getMessage());
+		}
+		apiCall(post);
+	} catch (NullPointerException e) {
+		throw new NetworkErrorException("404");
+	}
+	return true;
+}
 }

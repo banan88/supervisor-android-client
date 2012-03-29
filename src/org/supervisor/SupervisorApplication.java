@@ -25,7 +25,7 @@ import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.util.Log;
 
-public class SupervisorApplication extends Application {
+public class SupervisorApplication extends Application implements LocationListener {
 	
 	private static final String TAG = SupervisorApplication.class.getSimpleName();
 	private SharedPreferences prefs;
@@ -37,14 +37,19 @@ public class SupervisorApplication extends Application {
 	public static final int SERVER_ERR_500 = 500;
 	public static final int SYNC_START = 0;
 	public static final int SYNC_COUNT = 200;
-	private GeoLocation geoLocation;
+	private Location lastLocation;
+	private LocationManager locationManager;
+	private String provider;
+	private Time t;
 	
 	
 	public void onCreate() {
 		super.onCreate();	
+		initPosition();
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		dataStorage = new DataStorage(this);	
 		mgr = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		t = new Time();
 	}
 	
 	
@@ -270,69 +275,62 @@ public class SupervisorApplication extends Application {
 	}		
 	
 	
-	public void setTaskStatesTableVersion(int version){
-		Editor preferenceEditor = prefs.edit();
-		preferenceEditor.putInt("TASK_STATES_TABLE_VERSION", version);
-		preferenceEditor.commit();
-	}
-	
-	public int getTaskStatesTableVersion() {
-		return prefs.getInt("TASK_STATES_TABLE_VERSION", 0);
-	}
-	
-	
 	public boolean checkGPS() {
 		LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
 		return service.isProviderEnabled(LocationManager.GPS_PROVIDER);
 	}
 	
+	public void initPosition() {
+		Log.d(TAG, "initPosition");
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		if ( checkGPS())
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30*1000, 15, this);
+		else
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30*1000, 15, this);
+		provider = locationManager.getBestProvider(new Criteria(), true);
+		lastLocation = locationManager.getLastKnownLocation(provider);
+	}
+	
 	
 	public Location getLastLocation() {
-		if(geoLocation==null)
-			geoLocation = new GeoLocation();	
-		return geoLocation.lastLocation;
+		return lastLocation;
 	}
 	
-	
-	class GeoLocation {
-		
-		private LocationManager locationManager;
-		private String provider;
-		private Location lastLocation;
-		
-		public GeoLocation() {
-			Log.d(TAG, "GeoLocation constructor");
-			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, //3min 30meters
-					0, new LocationListener() {
-						
-						public void onStatusChanged(String provider, int status, Bundle extras) {}
-						
-						public void onProviderEnabled(String provider) {}
-					
-						public void onProviderDisabled(String provider) {}
-						
-						public void onLocationChanged(Location location) {
-							lastLocation = location;	
-							 int lat = (int) (location.getLatitude());
-								int lng = (int) (location.getLongitude());
-								Log.d("LocationChanged()", "lat: " + Long.toString(lat) + " lon: " + Long.toString(lng));
-						}
-					});
-			Criteria criteria = new Criteria();
-			provider = locationManager.getBestProvider(criteria, true);
-			Log.d(TAG, provider);
-			lastLocation = locationManager.getLastKnownLocation(provider);
-			if(lastLocation==null){ //fake location for emulator..
-				Log.d(TAG, "USED FAKE LOCATION WITH NETWORK PROVIDER");
-				Location l = new Location(LocationManager.NETWORK_PROVIDER);
-				l.setLatitude(21.666);
-				l.setLongitude(22.666);
-				lastLocation = l;
-			}
-		}
+	public void setLastLocation(Location newLocation) {
+		lastLocation = new Location(newLocation);
+	}
 
+
+	public void onLocationChanged(Location location) {
+		if (lastLocation.distanceTo(location) > 50.0 ) { //insert into database only if user travelled at least 50m
+			t.setToNow();
+			dataStorage.insertUserPositionUpdate(t.toMillis(false), location.getLatitude(), location.getLongitude());
+		}
+		setLastLocation(location);
+		Log.d(TAG, "location change: " + getLastLocation().toString());
 	}
-	
+
+	public void onProviderDisabled(String provider) {
+		Log.d(TAG, "provider : " +provider + " disabled");
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30*1000, 15,  this);
+		}else {
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30*1000, 15, this);
+		} 
+	}
+
+	public void onProviderEnabled(String provider) {
+		Log.d(TAG, "provider : " +provider + " enabled");
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);   
+		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30*1000, 15, this);
+		} else {
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30*1000, 15, this);
+		}
+	}
+
+	public void onStatusChanged(String provider, int status, Bundle extras) {}
+
 }
 

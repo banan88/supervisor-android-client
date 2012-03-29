@@ -89,13 +89,14 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 		logo.setOnTouchListener(this);
 		
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		if ( global_app.checkGPS())
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30*1000, 15, this);
+		else
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30*1000, 15, this);
 		provider = locationManager.getBestProvider(new Criteria(), true);
 		lastLocation = locationManager.getLastKnownLocation(provider);
-		if(lastLocation == null) {
-			lastLocation = new Location(LocationManager.NETWORK_PROVIDER);
-			lastLocation.setLatitude(50.8167);
-			lastLocation.setLongitude(19.1167);
-		}
+
+		global_app.setLastLocation(lastLocation);
 		Log.d(TAG, "lastLocation: LAT: " + Double.toString(lastLocation.getLatitude()) + " LON: " + 
 		Double.toString(lastLocation.getLongitude()));
 		
@@ -128,8 +129,9 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
     
 	protected void onResume() {
 		super.onResume();
+		Log.d(TAG, Boolean.toString(animateToTaskPosition));
 		registerReceiver(receiver, filter);
-		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30*1000, 15, this);
 		if(animateToTaskPosition) {
 			Task task = global_app.getDataStorage().getTaskById(taskId);
 			GeoPoint tmp = new GeoPoint((int) (task.getLatitude()*1E6), (int) (task.getLongitude()*1E6));
@@ -213,6 +215,7 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
         	double lon = tasksCursor.getDouble(tasksCursor.getColumnIndex(DataStorage.C_LON));
         	String taskTitle = (tasksCursor.getString(tasksCursor.getColumnIndex(DataStorage.C_NAME)));
         	int taskState = (tasksCursor.getInt(tasksCursor.getColumnIndex(DataStorage.C_STATE)));
+        	int taskId = (tasksCursor.getInt(tasksCursor.getColumnIndex(DataStorage.C_ID)));
         	GeoPoint taskLocation = new GeoPoint((int)(lat*1E6), (int)(lon*1E6));
         	Location tmp = new Location(provider);
         	tmp.setLatitude(lat);
@@ -223,7 +226,7 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
         		prettyDistance = km.format(distance / 1000) + "km";
         	else 
         		prettyDistance = m.format(distance) + "m";
-        	OverlayItem taskOverlayItem = new OverlayItem(taskLocation, taskTitle, 
+        	OverlayItem taskOverlayItem = new OverlayItem(taskLocation, taskTitle + " (id: " +  Integer.toString(taskId) + ")", 
         			"oddalone o: " + prettyDistance);
         	Drawable marker;
         	switch(taskState){
@@ -277,11 +280,28 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 		Log.d(TAG, "lastLocation change: LAT: " + Double.toString(lastLocation.getLatitude()) + " LON: " + 
 				Double.toString(lastLocation.getLongitude()));
 		paintCurrentPostion();
+		paintTasks();
 	}
 
-	public void onProviderDisabled(String provider) {}
+	public void onProviderDisabled(String provider) {
+		Log.d(TAG, "provider : " +provider + " disabled");
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30*1000, 15,  this);
+		}else {
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30*1000, 15, this);
+		} 
+	}
 
-	public void onProviderEnabled(String provider) {}
+	public void onProviderEnabled(String provider) {
+		Log.d(TAG, "provider : " +provider + " enabled");
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);   
+		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 30*1000, 15, this);
+		} else {
+			locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 30*1000, 15, this);
+		}
+	}
 
 	public void onStatusChanged(String provider, int status, Bundle extras) {}
 
@@ -290,7 +310,7 @@ public class DefaultMapActivity extends MapActivity implements LocationListener,
 	class TaskUpdateReceiver extends BroadcastReceiver{
 
 		public void onReceive(Context context, Intent intent) {
-			DefaultMapActivity.this.paintTasks();
+			paintTasks();
 		}
 
 

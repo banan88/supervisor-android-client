@@ -51,13 +51,13 @@ public class SearchActivity extends BaseActivity {
 		shortLogo.setOnClickListener(this);
 		shortLogo.setOnTouchListener(this);
 		spinner = (Spinner) findViewById(R.id.category);
-		
 		searchText = (EditText) findViewById(R.id.searchText);
 		searchText.setOnEditorActionListener(new OnEditorActionListener() {
 			
 			public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 				Log.d(TAG, "onEditorAction()");
-				if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN)
+				if ((actionId == EditorInfo.IME_NULL || actionId == KeyEvent.KEYCODE_ENTER)
+						&& event.getAction() == KeyEvent.ACTION_DOWN)
 				{
 							Log.d(TAG, "insideAction");
 					      loadSearchResults();

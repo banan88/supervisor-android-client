@@ -7,6 +7,9 @@
     <string name="permission_description">Aktualizowanie stanu zadań</string>
     <string name="permission_label">Aktualizacje zadań</string>
     
+    <string name="task_state_current">Aktywne</string>
+    <string name="task_state_done">Wykonane</string>
+    <string name="too_far">Jesteś za daleko aby zakończyć zadanie</string>
     
     <string name="taskList">Lista zadań</string>
     <string name="username_title">Nazwa użytkownika</string>
