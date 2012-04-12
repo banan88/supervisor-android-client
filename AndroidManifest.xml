@@ -10,40 +10,43 @@
     
     
     
-    <application android:name="SupervisorApplication" android:debuggable="true" 
+    <application android:name=".Util.SupervisorApplication" android:debuggable="true" 
         android:icon="@drawable/keylauncher" android:label="@string/app_name">
         <uses-library android:name="com.google.android.maps"/>
-        <activity android:name=".MainScreenActivity"
+        <activity android:name=".Activities.MainScreenActivity"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DefaultMapActivity" ></activity>
-        <activity android:name=".PreferencesActivity" android:label="@string/preferences_menu_title"></activity>
-        <activity android:name=".TimeActivity"></activity>
-        <activity android:name=".TasksActivity"></activity>
-        <activity android:name=".SearchActivity">
+        <activity android:name=".Activities.DefaultMapActivity" ></activity>
+        <activity android:name=".Activities.PreferencesActivity" android:label="@string/preferences_menu_title"></activity>
+        <activity android:name=".Activities.TimeActivity"></activity>
+        <activity android:name=".Activities.TasksActivity"></activity>
+        <activity android:name=".Activities.SearchActivity">
         </activity>
-        <activity android:name=".SingleTaskActivity"></activity>
-        <activity android:name=".TimeActivity"></activity>
-        <activity android:name=".TasksArchiveActivity"></activity>
-        <service android:name=".SynchronisationService"></service>
-        <receiver android:name=".NetworkReceiver">
+        <activity android:name=".Activities.SingleTaskActivity"></activity>
+        <activity android:name=".Activities.TimeActivity"></activity>
+        <activity android:name=".Activities.TasksArchiveActivity"></activity>
+        
+        <service android:name=".Services.SynchronisationService"></service>
+        <service android:name=".Services.LocationUpdateService"></service>
+        
+        <receiver android:name=".Util.NetworkReceiver">
         	<intent-filter >
         		<action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
         	</intent-filter>
         </receiver>
-        <receiver android:name=".BootReceiver">
+        <receiver android:name=".Util.BootReceiver">
         	<intent-filter>
         		<action android:name="android.intent.action.BOOT_COMPLETED" />
         	</intent-filter>
         </receiver>
         
-        <receiver android:name=".SyncRequestReceiver">
+        <receiver android:name=".Util.SyncRequestReceiver" />
         	
-        </receiver>
+        <receiver android:name=".Util.LocationChangedReceiver"/>
 
     </application>
 </manifest>
