@@ -184,16 +184,16 @@ public class DefaultMapActivity extends MapActivity implements OnClickListener, 
 	}
 		
 	public void paintCurrentPostion() {
-		int lat = (int) ((Double.valueOf(decimalFormat.format(lastLocation.getLatitude()))) * 1E6);
-		int lng = (int) (lastLocation.getLongitude() * 1E6);
+		int lat = (int) ((new Double(lastLocation.getLatitude())) * 1E6);
+		int lng = (int) ((new Double(lastLocation.getLongitude())) * 1E6);
 		geoPoint = new GeoPoint(lat, lng);
 		
 		allOverlays = mapView.getOverlays();
 		allOverlays.remove(updatablePositionOverlay);
 		updatablePositionOverlay = new TasksOverlay(userMarker, this);
 		updatablePositionOverlay.addOverlay(new OverlayItem(geoPoint, global_app.getUsername(), 
-				Double.toString(Double.valueOf(decimalFormat.format(lastLocation.getLatitude()))) + " " +
-				Double.toString(Double.valueOf(decimalFormat.format(lastLocation.getLongitude())))));
+				Double.toString(Double.valueOf(lastLocation.getLatitude())) + " " +
+				Double.toString(Double.valueOf(lastLocation.getLongitude()))));
 		allOverlays.add(updatablePositionOverlay);
 		mapView.invalidate();  
 	}
