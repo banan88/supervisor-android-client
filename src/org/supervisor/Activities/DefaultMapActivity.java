@@ -94,8 +94,8 @@ public class DefaultMapActivity extends MapActivity implements OnClickListener, 
 		logo.setOnTouchListener(this);
 		
 		lastLocation = global_app.getLastLocation();
-		Log.d(TAG, "lastLocation: LAT: " + Double.toString(lastLocation.getLatitude()) + " LON: " + 
-		Double.toString(lastLocation.getLongitude()));
+		//Log.d(TAG, "lastLocation: LAT: " + Double.toString(lastLocation.getLatitude()) + " LON: " + 
+		//Double.toString(lastLocation.getLongitude()));
 		
 		userMarker = getResources().getDrawable(R.drawable.me);
 		currentMarker = getResources().getDrawable(R.drawable.current_marker);
@@ -134,6 +134,7 @@ public class DefaultMapActivity extends MapActivity implements OnClickListener, 
 			mapController.animateTo(tmp);
 		}
 		else {
+			lastLocation = global_app.getLastLocation();
 			int lat = (int) (lastLocation.getLatitude() * 1E6);
 			int lng = (int) (lastLocation.getLongitude() * 1E6);
 			geoPoint = new GeoPoint(lat, lng);
